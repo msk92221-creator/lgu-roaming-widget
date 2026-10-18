@@ -37,7 +37,7 @@
     <string name="widget_help">폴드7의 커버 화면과 메인 화면은 위젯 구성이 따로일 수 있습니다. 필요한 화면마다 추가해 주세요.</string>
     <string name="add_widget">위젯 추가</string>
 
-    <string name="no_estimation_notice">이 버전은 휴대폰 사용량을 빼거나 값을 계산하지 않습니다. U+one이 닫혀 있으면 Android 보안 구조상 숨은 백그라운드 조회는 할 수 없습니다.</string>
+    <string name="no_estimation_notice">남은량과 전체량은 U+one 총 데이터 행에서 읽습니다. 사용량은 표시된 전체량−남은량이며 U+one의 반올림 단위를 따릅니다. 위젯을 눌러 U+one 화면을 열 때 갱신합니다.</string>
     <string name="privacy_notice">인터넷 권한 없음 · 계정/비밀번호 미수집 · 기기 안에만 저장</string>
 
     <string name="widget_description">U+one 해외 로밍 이용 현황의 실제 표시값을 홈 화면에 보여 줍니다.</string>

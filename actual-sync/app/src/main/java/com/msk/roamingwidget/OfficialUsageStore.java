@@ -18,6 +18,9 @@ final class OfficialUsageStore {
     private static final String KEY_PRIMARY = "official_primary_text";
     private static final String KEY_DETAILS = "official_details_text";
     private static final String KEY_KIND = "official_kind";
+    private static final String KEY_REMAINING = "remaining_text";
+    private static final String KEY_USED = "used_text";
+    private static final String KEY_TOTAL = "total_text";
     private static final String KEY_CAPTURED_AT = "captured_at";
     private static final String KEY_STATUS = "scan_status";
     private static final String KEY_DIAGNOSTIC = "diagnostic";
@@ -50,7 +53,11 @@ final class OfficialUsageStore {
                 status,
                 preferences.getString(KEY_DIAGNOSTIC, ""),
                 preferences.getLong(KEY_LAST_SCAN_AT, 0L),
-                syncRequestedAt
+                syncRequestedAt,
+                preferences.getString(KEY_REMAINING,
+                        preferences.getString(KEY_PRIMARY, "").replace(" 남음", "")),
+                preferences.getString(KEY_USED, ""),
+                preferences.getString(KEY_TOTAL, "")
         );
     }
 
@@ -60,6 +67,7 @@ final class OfficialUsageStore {
                 .putString(KEY_STATUS, STATUS_WAITING)
                 .putLong(KEY_SYNC_REQUESTED_AT, now)
                 .putLong(KEY_LAST_SCAN_AT, 0L)
+                .putString(KEY_DIAGNOSTIC, "")
                 .apply();
     }
 
@@ -74,6 +82,10 @@ final class OfficialUsageStore {
                 .putString(KEY_PRIMARY, result.primaryText)
                 .putString(KEY_DETAILS, result.detailsText)
                 .putString(KEY_KIND, result.kind.name())
+                .putString(KEY_REMAINING, result.balance == null
+                        ? result.primaryText.replace(" 남음", "") : result.balance.remainingText)
+                .putString(KEY_USED, result.balance == null ? "" : result.balance.usedText)
+                .putString(KEY_TOTAL, result.balance == null ? "" : result.balance.totalText)
                 .putLong(KEY_CAPTURED_AT, now)
                 .putString(KEY_STATUS, STATUS_READY)
                 .putString(KEY_DIAGNOSTIC, result.diagnostic)
@@ -136,6 +148,9 @@ final class OfficialUsageStore {
         final String diagnostic;
         final long lastScanAt;
         final long syncRequestedAt;
+        final String remainingText;
+        final String usedText;
+        final String totalText;
 
         Snapshot(
                 boolean hasValue,
@@ -146,7 +161,10 @@ final class OfficialUsageStore {
                 String status,
                 String diagnostic,
                 long lastScanAt,
-                long syncRequestedAt
+                long syncRequestedAt,
+                String remainingText,
+                String usedText,
+                String totalText
         ) {
             this.hasValue = hasValue;
             this.primaryText = primaryText;
@@ -157,6 +175,9 @@ final class OfficialUsageStore {
             this.diagnostic = diagnostic;
             this.lastScanAt = lastScanAt;
             this.syncRequestedAt = syncRequestedAt;
+            this.remainingText = remainingText;
+            this.usedText = usedText;
+            this.totalText = totalText;
         }
     }
 }

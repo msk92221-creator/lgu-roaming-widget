@@ -60,6 +60,10 @@ public final class MainActivity extends Activity {
                     ? R.string.displayed_usage_meta
                     : R.string.captured_meta;
             summaryMeta.setText(getString(meta, TimeFormat.relative(this, snapshot.capturedAt)));
+            if (!snapshot.usedText.isEmpty()) {
+                summaryMeta.append("\n사용 " + snapshot.usedText + " · 전체 " + snapshot.totalText
+                        + "\n사용량 = U+one 전체량 − 남은량");
+            }
         } else {
             summaryValue.setText(R.string.not_captured);
             summaryMeta.setText(R.string.not_captured_meta);

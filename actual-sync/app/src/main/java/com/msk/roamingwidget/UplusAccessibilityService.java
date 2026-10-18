@@ -1,6 +1,7 @@
 package com.msk.roamingwidget;
 
 import android.accessibilityservice.AccessibilityService;
+import android.graphics.Rect;
 import android.os.Handler;
 import android.os.Looper;
 import android.view.accessibility.AccessibilityEvent;
@@ -58,7 +59,7 @@ public final class UplusAccessibilityService extends AccessibilityService {
             return;
         }
 
-        UplusScreenParser.Result result = UplusScreenParser.parse(collectVisibleText(root));
+        UplusScreenParser.Result result = UplusScreenParser.parseScreen(collectVisibleText(root));
         if (result.status == UplusScreenParser.Status.SUCCESS) {
             handleStableSuccess(result);
             return;
@@ -101,16 +102,23 @@ public final class UplusAccessibilityService extends AccessibilityService {
         pendingSince = 0L;
     }
 
-    private static List<String> collectVisibleText(AccessibilityNodeInfo root) {
+    private static List<ScreenText> collectVisibleText(AccessibilityNodeInfo root) {
         ArrayDeque<AccessibilityNodeInfo> queue = new ArrayDeque<>();
-        List<String> output = new ArrayList<>();
+        List<ScreenText> output = new ArrayList<>();
         queue.add(root);
         int visited = 0;
         while (!queue.isEmpty() && visited < MAX_NODES) {
             AccessibilityNodeInfo node = queue.removeFirst();
             visited++;
             if (node.isVisibleToUser() && !node.isPassword()) {
-                addNodeText(output, node.getText(), node.getContentDescription());
+                List<String> texts = new ArrayList<>(1);
+                addNodeText(texts, node.getText(), node.getContentDescription());
+                if (!texts.isEmpty()) {
+                    Rect bounds = new Rect();
+                    node.getBoundsInScreen(bounds);
+                    output.add(new ScreenText(texts.get(0), bounds.left, bounds.top,
+                            bounds.right, bounds.bottom));
+                }
             }
             for (int index = 0; index < node.getChildCount(); index++) {
                 AccessibilityNodeInfo child = node.getChild(index);

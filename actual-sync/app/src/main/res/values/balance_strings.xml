@@ -1,0 +1,15 @@
+<resources>
+    <string name="balance_widget_title">U+one 로밍</string>
+    <string name="balance_used_label">사용량(차액)</string>
+    <string name="balance_remaining_label">남은량</string>
+    <string name="balance_missing">—</string>
+    <string name="balance_total">전체 %1$s</string>
+    <string name="balance_sync_time">U+one · %1$s</string>
+    <string name="balance_not_synced">아직 동기화 안 됨</string>
+    <string name="balance_tap_to_sync">눌러서 동기화</string>
+    <string name="balance_content_description">U+one 로밍. 전체에서 남은량을 뺀 사용량 %1$s, 남은량 %2$s, 전체 %3$s. 마지막 동기화 %4$s. 누르면 U+one을 열어 다시 동기화합니다.</string>
+    <string name="balance_preview_used">1.2 GB</string>
+    <string name="balance_preview_remaining">47.8 GB</string>
+    <string name="balance_preview_total">전체 49 GB</string>
+    <string name="balance_preview_time">U+one · 10월 19일 09:30</string>
+</resources>

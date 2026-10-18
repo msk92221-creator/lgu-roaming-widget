@@ -33,19 +33,18 @@ final class WidgetUpdater {
         OfficialUsageStore.Snapshot snapshot = OfficialUsageStore.read(context);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             Map<SizeF, RemoteViews> layouts = new LinkedHashMap<>();
-            layouts.put(new SizeF(160f, 90f), createViews(context, appWidgetId, LAYOUT_COMPACT, snapshot));
-            layouts.put(new SizeF(180f, 160f), createViews(context, appWidgetId, LAYOUT_STANDARD, snapshot));
-            layouts.put(new SizeF(320f, 100f), createViews(context, appWidgetId, LAYOUT_WIDE, snapshot));
+            layouts.put(new SizeF(180f, 100f), createViews(context, appWidgetId, LAYOUT_COMPACT, snapshot));
+            layouts.put(new SizeF(250f, 120f), createViews(context, appWidgetId, LAYOUT_STANDARD, snapshot));
+            layouts.put(new SizeF(320f, 120f), createViews(context, appWidgetId, LAYOUT_WIDE, snapshot));
             manager.updateAppWidget(appWidgetId, new RemoteViews(layouts));
             return;
         }
 
         Bundle options = manager.getAppWidgetOptions(appWidgetId);
-        int minWidth = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, 180);
-        int minHeight = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT, 160);
-        int layout = minHeight < 150
-                ? (minWidth >= 320 ? LAYOUT_WIDE : LAYOUT_COMPACT)
-                : LAYOUT_STANDARD;
+        int minWidth = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, 280);
+        int minHeight = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT, 120);
+        int layout = minWidth < 250 || minHeight < 120
+                ? LAYOUT_COMPACT : minWidth >= 320 ? LAYOUT_WIDE : LAYOUT_STANDARD;
         manager.updateAppWidget(appWidgetId, createViews(context, appWidgetId, layout, snapshot));
     }
 
@@ -55,45 +54,37 @@ final class WidgetUpdater {
             int layout,
             OfficialUsageStore.Snapshot snapshot
     ) {
-        boolean compact = layout == LAYOUT_COMPACT;
-        int layoutId = compact
+        int layoutId = layout == LAYOUT_COMPACT
                 ? R.layout.widget_roaming_compact
                 : layout == LAYOUT_WIDE ? R.layout.widget_roaming_wide : R.layout.widget_roaming;
         RemoteViews views = new RemoteViews(context.getPackageName(), layoutId);
         PendingIntent sync = syncIntent(context, appWidgetId);
         views.setOnClickPendingIntent(R.id.widgetRoot, sync);
-        if (!compact) {
-            views.setOnClickPendingIntent(R.id.widgetRefresh, sync);
-        }
+        views.setOnClickPendingIntent(R.id.widgetRefresh, sync);
+        views.setTextViewText(R.id.widgetTitle, context.getString(R.string.balance_widget_title));
+        views.setTextViewText(R.id.widgetUsedLabel, context.getString(R.string.balance_used_label));
+        views.setTextViewText(R.id.widgetRemainingLabel, context.getString(R.string.balance_remaining_label));
 
-        views.setTextViewText(
-                R.id.widgetTitle,
-                context.getString(compact ? R.string.widget_title_compact : R.string.widget_title)
-        );
-        if (snapshot.hasValue) {
-            views.setTextViewText(R.id.widgetValue, snapshot.primaryText);
-            views.setTextViewText(R.id.widgetDetails, snapshot.detailsText);
-            if (!compact) {
-                views.setTextViewText(
-                        R.id.widgetUpdated,
-                        context.getString(
-                                R.string.widget_source,
-                                TimeFormat.relative(context, snapshot.capturedAt)
-                        )
-                );
-            }
-        } else {
-            views.setTextViewText(R.id.widgetValue, context.getString(R.string.widget_no_value));
-            views.setTextViewText(R.id.widgetDetails, context.getString(R.string.widget_tap_to_sync));
-            if (!compact) {
-                views.setTextViewText(R.id.widgetUpdated, context.getString(R.string.widget_source_never));
-            }
-        }
-        views.setContentDescription(
-                R.id.widgetRoot,
-                context.getString(R.string.widget_content_description)
-        );
+        String remaining = displayValue(context, snapshot.hasValue ? snapshot.remainingText : "");
+        String used = displayValue(context, snapshot.hasValue ? snapshot.usedText : "");
+        String total = displayValue(context, snapshot.hasValue ? snapshot.totalText : "");
+        String captured = snapshot.hasValue
+                ? TimeFormat.relative(context, snapshot.capturedAt)
+                : context.getString(R.string.balance_not_synced);
+        views.setTextViewText(R.id.widgetValue, remaining);
+        views.setTextViewText(R.id.widgetUsed, used);
+        views.setTextViewText(R.id.widgetDetails, context.getString(R.string.balance_total, total));
+        views.setTextViewText(R.id.widgetUpdated, snapshot.hasValue
+                ? context.getString(R.string.balance_sync_time, captured)
+                : context.getString(R.string.balance_tap_to_sync));
+        views.setContentDescription(R.id.widgetRoot, context.getString(
+                R.string.balance_content_description, used, remaining, total, captured));
         return views;
+    }
+
+    private static String displayValue(Context context, String value) {
+        return value == null || value.trim().isEmpty()
+                ? context.getString(R.string.balance_missing) : value;
     }
 
     private static PendingIntent syncIntent(Context context, int appWidgetId) {
