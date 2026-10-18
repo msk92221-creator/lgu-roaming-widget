@@ -81,6 +81,38 @@ public final class UplusTotalBalanceTest {
     }
 
     @Test
+    public void fullWidthWebViewValueCanOverlapTheLabelBounds() {
+        UplusScreenParser.Result result = UplusScreenParser.parseScreen(Arrays.asList(
+                new ScreenText("해외로밍 이용현황"),
+                text("총 데이터", 70, 840, 250, 880),
+                text("47.8GB남음 / 49GB", 70, 840, 850, 880)
+        ));
+        assertEquals(UplusScreenParser.Status.SUCCESS, result.status);
+        assertEquals("47.8 GB", result.balance.remainingText);
+    }
+
+    @Test
+    public void valueMustExtendToTheRightOfTheTotalLabel() {
+        UplusScreenParser.Result result = UplusScreenParser.parseScreen(Arrays.asList(
+                new ScreenText("해외로밍 이용현황"),
+                text("총 데이터", 400, 840, 600, 880),
+                text("47.8GB남음 / 49GB", 70, 840, 350, 880)
+        ));
+        assertEquals(UplusScreenParser.Status.NO_VALUE, result.status);
+    }
+
+    @Test
+    public void conflictingRatiosOnSameVisualRowAreAmbiguous() {
+        UplusScreenParser.Result result = UplusScreenParser.parseScreen(Arrays.asList(
+                new ScreenText("해외로밍 이용현황"),
+                text("총 데이터", 70, 840, 250, 880),
+                text("47.8GB남음 / 49GB", 70, 840, 850, 880),
+                text("40GB남음 / 49GB", 70, 840, 850, 880)
+        ));
+        assertEquals(UplusScreenParser.Status.AMBIGUOUS, result.status);
+    }
+
+    @Test
     public void remainingOverTotalAndZeroTotalAreRejected() {
         for (String pair : Arrays.asList("50GB남음 / 49GB", "0GB남음 / 0GB")) {
             UplusScreenParser.Result result = UplusScreenParser.parse(Arrays.asList(

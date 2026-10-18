@@ -81,7 +81,7 @@ final class UplusTotalBalanceParser {
             }
             for (ScreenText value : nodes) {
                 // Geometry, not breadth/depth-first ordering, associates the two cells.
-                if (value == node || !node.sameRowAs(value) || value.left < node.right) {
+                if (value == node || !node.sameRowAs(value) || value.right <= node.right) {
                     continue;
                 }
                 String valueText = normalize(value.text);
