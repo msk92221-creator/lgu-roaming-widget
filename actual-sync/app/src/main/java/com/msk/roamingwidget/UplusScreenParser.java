@@ -23,6 +23,7 @@ final class UplusScreenParser {
 
     enum Kind {
         DIRECT_REMAINING,
+        TOTAL_BALANCE,
         DISPLAYED_USED_OF_TOTAL,
         UNLIMITED
     }
@@ -33,13 +34,20 @@ final class UplusScreenParser {
         final String primaryText;
         final String detailsText;
         final String diagnostic;
+        final RoamingBalance balance;
 
         private Result(Status status, Kind kind, String primary, String details, String diagnostic) {
+            this(status, kind, primary, details, diagnostic, null);
+        }
+
+        private Result(Status status, Kind kind, String primary, String details,
+                String diagnostic, RoamingBalance balance) {
             this.status = status;
             this.kind = kind;
             this.primaryText = primary;
             this.detailsText = details;
             this.diagnostic = diagnostic;
+            this.balance = balance;
         }
 
         static Result success(Kind kind, String primary, String details, String diagnostic) {
@@ -109,6 +117,20 @@ final class UplusScreenParser {
     }
 
     static Result parse(List<String> rawNodes) {
+        List<ScreenText> screenNodes = new ArrayList<>();
+        if (rawNodes != null) {
+            for (String text : rawNodes) {
+                screenNodes.add(new ScreenText(text));
+            }
+        }
+        return parseScreen(screenNodes);
+    }
+
+    static Result parseScreen(List<ScreenText> screenNodes) {
+        List<String> rawNodes = new ArrayList<>();
+        for (ScreenText node : screenNodes) {
+            rawNodes.add(node.text);
+        }
         List<String> nodes = normalizeNodes(rawNodes);
         if (nodes.isEmpty()) {
             return Result.status(Status.NOT_ROAMING_SCREEN, "접근성 텍스트 노드 0개");
@@ -126,6 +148,22 @@ final class UplusScreenParser {
         }
 
         String diagnostic = buildRoamingDiagnostic(nodes);
+        UplusTotalBalanceParser.Selection total = UplusTotalBalanceParser.select(screenNodes);
+        if (total.invalid || total.balances.size() > 1) {
+            return Result.status(Status.AMBIGUOUS,
+                    diagnostic + "\n총 데이터 행이 여러 개이거나 잔여량/전체량이 일치하지 않음");
+        }
+        if (total.balances.size() == 1) {
+            RoamingBalance balance = total.balances.get(0);
+            return new Result(Status.SUCCESS, Kind.TOTAL_BALANCE,
+                    balance.remainingText + " 남음",
+                    "사용 " + balance.usedText + " · 전체 " + balance.totalText,
+                    diagnostic + "\n총 데이터 행 선택 · 사용량은 전체−남은량", balance);
+        }
+        if (total.hasTotalLabel) {
+            return Result.status(Status.NO_VALUE,
+                    diagnostic + "\n총 데이터 라벨과 같은 행의 잔여량/전체량을 확인하지 못함");
+        }
         List<Candidate> candidates = new ArrayList<>();
         for (int index = 0; index < nodes.size(); index++) {
             String localContext = join(nodes, Math.max(0, index - 2), Math.min(nodes.size(), index + 3));
@@ -333,7 +371,20 @@ final class UplusScreenParser {
 
     private static String buildRoamingDiagnostic(List<String> nodes) {
         List<String> relevant = new ArrayList<>();
+        List<String> ordered = new ArrayList<>();
         for (String node : nodes) {
+            if (node.contains("총 데이터") || node.contains("총데이터")
+                    || node.contains("기본 데이터") || node.contains("기본데이터")
+                    || DIRECT_AFTER.matcher(node).find()) {
+                ordered.add(node);
+            }
+        }
+        for (String node : nodes) {
+            if (!ordered.contains(node)) {
+                ordered.add(node);
+            }
+        }
+        for (String node : ordered) {
             if (!RELEVANT.matcher(node).find() || SENSITIVE_LABEL.matcher(node).find()) {
                 continue;
             }

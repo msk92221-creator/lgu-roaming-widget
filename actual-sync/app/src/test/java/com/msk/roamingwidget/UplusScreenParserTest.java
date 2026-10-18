@@ -106,8 +106,7 @@ public final class UplusScreenParserTest {
     public void samePhysicalNodeTextAndDescriptionAreOneMeter() {
         UplusScreenParser.Result result = UplusScreenParser.parse(Arrays.asList(
                 "해외로밍 이용현황",
-                "총 데이터",
-                "48.7GB남음 / 49GB 48.7GB남음 / 49GB",
+                "총 데이터 48.7GB남음 / 49GB 48.7GB남음 / 49GB",
                 "기본 데이터"
         ));
 
@@ -119,9 +118,8 @@ public final class UplusScreenParserTest {
     public void sameRatioFromTwoPhysicalNodesIsStillAmbiguous() {
         UplusScreenParser.Result result = UplusScreenParser.parse(Arrays.asList(
                 "해외로밍 이용현황",
-                "총 데이터",
-                "48.7GB남음 / 49GB",
-                "48.7GB남음 / 49GB",
+                "총 데이터 48.7GB남음 / 49GB",
+                "총 데이터 48.7GB남음 / 49GB",
                 "기본 데이터"
         ));
 
@@ -132,8 +130,7 @@ public final class UplusScreenParserTest {
     public void twoDifferentValuesInsideOnePhysicalNodeAreAmbiguous() {
         UplusScreenParser.Result result = UplusScreenParser.parse(Arrays.asList(
                 "해외로밍 이용현황",
-                "총 데이터",
-                "48.7GB남음 / 49GB 1GB남음 / 1GB",
+                "총 데이터 48.7GB남음 / 49GB 1GB남음 / 1GB",
                 "기본 데이터"
         ));
 
