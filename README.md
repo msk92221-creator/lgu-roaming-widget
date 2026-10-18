@@ -6,7 +6,7 @@ Galaxy Z Fold7 홈 화면에서 **U+one의 ‘해외 로밍 이용 현황’에 
 
 ## beta APK 설치
 
-[v2.0.0-beta1 APK 바로 받기](https://github.com/msk92221-creator/lgu-roaming-widget/releases/download/v2.0.0-beta1/lgu-roaming-widget-v2.0.0-beta1.apk)
+[v2.0.0-beta2 APK 바로 받기](https://github.com/msk92221-creator/lgu-roaming-widget/releases/download/v2.0.0-beta2/lgu-roaming-widget-v2.0.0-beta2.apk)
 
 기존 1.0이 설치돼 있으면 같은 서명 키의 업데이트로 설치됩니다.
 
@@ -17,7 +17,7 @@ Galaxy Z Fold7 홈 화면에서 **U+one의 ‘해외 로밍 이용 현황’에 
 5. 앱이 U+one의 `해외 로밍 이용 현황` 화면을 공식 딥링크로 열고, 표시된 잔여량 원문을 감지하면 위젯을 갱신합니다.
 6. 감지되지 않으면 앱의 **기기 확인용 정보 → 진단 정보 복사** 결과를 이 개발 작업에 보내 주세요.
 
-beta1은 Fold7의 실제 U+one 접근성 화면 구조를 확인하기 위한 버전입니다. 화면 구조가 확인되기 전에는 값을 추측하지 않고 실패 상태로 남깁니다.
+beta2는 실제 Fold7 진단에서 확인된 U+one의 중복 접근성 문구를 같은 물리 노드 안에서만 하나로 합칩니다. 서로 다른 계량기는 값이 같아도 계속 구분하며, 읽을 수 없는 값은 추측하지 않고 실패 상태로 남깁니다.
 
 ## 작동 원칙
 

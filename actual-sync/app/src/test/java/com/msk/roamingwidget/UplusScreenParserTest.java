@@ -103,6 +103,55 @@ public final class UplusScreenParserTest {
     }
 
     @Test
+    public void samePhysicalNodeTextAndDescriptionAreOneMeter() {
+        UplusScreenParser.Result result = UplusScreenParser.parse(Arrays.asList(
+                "해외로밍 이용현황",
+                "총 데이터",
+                "48.7GB남음 / 49GB 48.7GB남음 / 49GB",
+                "기본 데이터"
+        ));
+
+        assertEquals(UplusScreenParser.Status.SUCCESS, result.status);
+        assertEquals("48.7 GB 남음", result.primaryText);
+    }
+
+    @Test
+    public void sameRatioFromTwoPhysicalNodesIsStillAmbiguous() {
+        UplusScreenParser.Result result = UplusScreenParser.parse(Arrays.asList(
+                "해외로밍 이용현황",
+                "총 데이터",
+                "48.7GB남음 / 49GB",
+                "48.7GB남음 / 49GB",
+                "기본 데이터"
+        ));
+
+        assertEquals(UplusScreenParser.Status.AMBIGUOUS, result.status);
+    }
+
+    @Test
+    public void twoDifferentValuesInsideOnePhysicalNodeAreAmbiguous() {
+        UplusScreenParser.Result result = UplusScreenParser.parse(Arrays.asList(
+                "해외로밍 이용현황",
+                "총 데이터",
+                "48.7GB남음 / 49GB 1GB남음 / 1GB",
+                "기본 데이터"
+        ));
+
+        assertEquals(UplusScreenParser.Status.AMBIGUOUS, result.status);
+    }
+
+    @Test
+    public void sameRemainingWithDifferentTotalsIsAmbiguous() {
+        UplusScreenParser.Result result = UplusScreenParser.parse(Arrays.asList(
+                "해외로밍 이용현황",
+                "48.7GB남음 / 49GB",
+                "48.7GB남음 / 60GB"
+        ));
+
+        assertEquals(UplusScreenParser.Status.AMBIGUOUS, result.status);
+    }
+
+    @Test
     public void compoundUnitsAreRejectedInsteadOfTruncated() {
         UplusScreenParser.Result result = UplusScreenParser.parse(Arrays.asList(
                 "해외 로밍 이용 현황",
