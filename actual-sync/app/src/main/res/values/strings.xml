@@ -1,0 +1,60 @@
+<resources>
+    <string name="app_name">U+ 로밍 실제값 위젯</string>
+    <string name="accessibility_service_label">U+one 로밍 실제값 읽기</string>
+    <string name="accessibility_service_description">U+one 앱의 ‘해외 로밍 이용 현황’ 화면이 열려 있을 때 로밍 데이터 표시값만 읽어 위젯에 저장합니다. 다른 앱은 읽지 않으며 값을 추정하지 않습니다.</string>
+
+    <string name="screen_title">U+ 로밍 실제값 위젯</string>
+    <string name="screen_subtitle">U+one 화면에 실제로 표시된 값만 저장합니다</string>
+    <string name="official_value_title">U+one에서 읽은 최근 값</string>
+    <string name="not_captured">아직 동기화된 값 없음</string>
+    <string name="not_captured_meta">아래 순서대로 한 번 설정해 주세요</string>
+    <string name="captured_meta">U+one ‘해외 로밍 이용 현황’에서 %1$s 확인</string>
+    <string name="displayed_usage_meta">U+one이 잔여량 대신 사용/제공량을 표시해 원문 그대로 저장했습니다 · %1$s</string>
+
+    <string name="step_permission">1. U+one 화면 읽기 허용</string>
+    <string name="permission_body">이 앱의 접근성 서비스를 켜 주세요. 서비스는 U+one 패키지에만 제한되며, 로밍 이용 현황 화면의 데이터 문구만 기기에 저장합니다.</string>
+    <string name="permission_checking">권한 상태 확인 중…</string>
+    <string name="permission_allowed">허용됨 · U+one 로밍 화면을 읽을 수 있어요</string>
+    <string name="permission_required">허용 필요 · 접근성 설정에서 이 서비스를 켜 주세요</string>
+    <string name="permission_open">접근성 설정 열기</string>
+    <string name="app_info_open">앱 정보 열기</string>
+    <string name="restricted_settings_help">GitHub APK라 스위치가 막히면 앱 정보의 오른쪽 위 ⋮에서 ‘제한된 설정 허용’을 먼저 누르세요.</string>
+
+    <string name="step_sync">2. U+one 실제값 동기화</string>
+    <string name="sync_body">버튼을 누른 뒤 U+one에서 ‘해외 로밍 → 이용 현황’을 여세요. 해당 화면이 보일 때 실제 표시값을 자동으로 저장합니다.</string>
+    <string name="open_uplus_button">U+one 열고 동기화</string>
+    <string name="sync_waiting">U+one 로밍 이용 현황 화면을 기다리는 중</string>
+    <string name="sync_not_running">아직 동기화를 시작하지 않았습니다</string>
+    <string name="sync_success">실제 표시값을 동기화했습니다</string>
+    <string name="screen_found_no_value">로밍 화면은 찾았지만 잔여량 문구를 읽지 못했습니다</string>
+    <string name="ambiguous_value">로밍 수치가 여러 개라 자동 선택하지 않았습니다</string>
+    <string name="diagnostic_title">기기 확인용 정보</string>
+    <string name="diagnostic_help">동기화가 안 되면 이 내용을 복사해 개발 작업에 보내 주세요. 전화번호·계정·비밀번호는 저장하지 않습니다.</string>
+    <string name="diagnostic_empty">아직 진단 정보가 없습니다</string>
+    <string name="copy_diagnostic">진단 정보 복사</string>
+
+    <string name="step_widget">3. 홈 화면에 추가</string>
+    <string name="widget_help">폴드7의 커버 화면과 메인 화면은 위젯 구성이 따로일 수 있습니다. 필요한 화면마다 추가해 주세요.</string>
+    <string name="add_widget">위젯 추가</string>
+
+    <string name="no_estimation_notice">이 버전은 휴대폰 사용량을 빼거나 값을 계산하지 않습니다. U+one이 닫혀 있으면 Android 보안 구조상 숨은 백그라운드 조회는 할 수 없습니다.</string>
+    <string name="privacy_notice">인터넷 권한 없음 · 계정/비밀번호 미수집 · 기기 안에만 저장</string>
+
+    <string name="widget_description">U+one 해외 로밍 이용 현황의 실제 표시값을 홈 화면에 보여 줍니다.</string>
+    <string name="widget_title">U+one 로밍 · 실제 표시값</string>
+    <string name="widget_title_compact">U+ 로밍 실제값</string>
+    <string name="widget_content_description">U+one에서 읽은 로밍 데이터 표시값. 누르면 U+one을 열어 다시 동기화합니다.</string>
+    <string name="widget_no_value">동기화 필요</string>
+    <string name="widget_tap_to_sync">눌러서 U+one 열기</string>
+    <string name="widget_source">U+one 이용 현황 · %1$s</string>
+    <string name="widget_source_never">U+one 이용 현황을 열어 주세요</string>
+    <string name="refresh">U+one에서 다시 동기화</string>
+
+    <string name="toast_accessibility_first">먼저 접근성 설정에서 ‘U+one 로밍 실제값 읽기’를 켜 주세요.</string>
+    <string name="toast_uplus_missing">U+one 앱을 찾지 못해 설치 페이지를 엽니다.</string>
+    <string name="toast_sync_started">U+one에서 해외 로밍 → 이용 현황을 열어 주세요.</string>
+    <string name="toast_capture_success">U+one 실제 로밍 값을 위젯에 저장했습니다.</string>
+    <string name="toast_screen_no_value">로밍 화면은 확인했지만 수치 구조를 아직 인식하지 못했습니다.</string>
+    <string name="toast_diagnostic_copied">진단 정보를 복사했습니다.</string>
+    <string name="toast_add_widget_manually">홈 화면을 길게 눌러 위젯 목록에서 추가해 주세요.</string>
+</resources>

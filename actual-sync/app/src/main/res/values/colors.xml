@@ -1,0 +1,15 @@
+<resources>
+    <color name="brand_purple">#7B2CBF</color>
+    <color name="brand_purple_dark">#4A1670</color>
+    <color name="brand_pink">#D946EF</color>
+    <color name="surface">#FFF9FF</color>
+    <color name="surface_variant">#F3E8FF</color>
+    <color name="ink">#23152D</color>
+    <color name="ink_muted">#6F6177</color>
+    <color name="white">#FFFFFFFF</color>
+    <color name="white_80">#CCFFFFFF</color>
+    <color name="white_60">#99FFFFFF</color>
+    <color name="error">#B3261E</color>
+    <color name="warning">#8A5100</color>
+    <color name="success">#19733B</color>
+</resources>
