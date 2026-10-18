@@ -1,0 +1,50 @@
+<resources>
+    <string name="app_name">로밍 잔여량 위젯</string>
+    <string name="widget_description">로밍 데이터 잔여량을 이 휴대폰 사용량 기준으로 추정해 표시합니다.</string>
+    <string name="widget_title">로밍 데이터 · 추정</string>
+    <string name="widget_title_tap_refresh">로밍 데이터 · 탭해 갱신</string>
+    <string name="widget_content_description">로밍 데이터 추정 잔여량. 탭하면 새로고침합니다.</string>
+    <string name="not_configured">설정이 필요해요</string>
+    <string name="tap_to_configure">눌러서 현재 잔여량 입력</string>
+    <string name="refresh">새로고침</string>
+    <string name="open_uplus">U+ 로밍 이용 현황</string>
+    <string name="remaining_format">%1$s 남음</string>
+    <string name="usage_format">%1$s 사용 / %2$s</string>
+    <string name="status_permission_widget">자동 차감 권한 필요</string>
+    <string name="status_error_widget">갱신 실패 · ↻로 다시 시도</string>
+    <string name="freshness_uplus">U+ 입력 %1$s · 공식 확인</string>
+    <string name="freshness_last_success">마지막 성공 %1$s · U+ 확인</string>
+    <string name="freshness_no_success">측정 실패 · U+ 확인</string>
+    <string name="freshness_device">이 휴대폰 측정 · %1$s · U+ 확인</string>
+
+    <string name="screen_title">로밍 잔여량 위젯</string>
+    <string name="screen_unconfigured">현재 남은 로밍 데이터를 입력해 주세요</string>
+    <string name="screen_local_only">모든 데이터는 이 휴대폰에만 저장됩니다</string>
+    <string name="step_one">1. U+ 공식 잔여량 확인</string>
+    <string name="step_one_body">U+one의 ‘해외 로밍 이용 현황’에서 현재 남은 데이터와 상품 제공량을 확인하세요. 이 앱은 U+ 계정이나 비밀번호를 읽지 않습니다.</string>
+    <string name="open_uplus_button">U+ 로밍 이용 현황 열기</string>
+    <string name="step_two">2. 현재 값 입력</string>
+    <string name="total_data_label">로밍 상품 제공량 (GB)</string>
+    <string name="total_data_hint">예: 13</string>
+    <string name="remaining_data_label">현재 남은 로밍 데이터 (GB)</string>
+    <string name="remaining_data_hint">예: 11.7</string>
+    <string name="calibration_help">저장 시점을 기준으로 이후 로밍 데이터만 자동 차감합니다. U+ 값과 차이가 생기면 다시 입력해 보정하세요.</string>
+    <string name="save_button">입력값 저장</string>
+    <string name="saving_button">기준값 계산 중…</string>
+    <string name="step_three">3. 자동 추정 허용</string>
+    <string name="permission_checking">사용정보 접근 권한 확인 중…</string>
+    <string name="permission_open">사용정보 접근 설정 열기</string>
+    <string name="refresh_now">지금 새로고침</string>
+    <string name="refreshing">갱신 중…</string>
+    <string name="step_four">4. 홈 화면에 추가</string>
+    <string name="widget_help">기본 3×2, 작은 2×1, 넓은 가로형에 맞춰 내용이 바뀝니다. One UI에서 커버·메인 홈 구성을 분리했다면 각 화면에 위젯을 추가하세요.</string>
+    <string name="add_widget">위젯 추가</string>
+    <string name="disclaimer">비공식 개인용 앱 · 통신사 과금값이 아닌 기기 추정값\n테더링·나눠쓰기·듀얼 SIM은 차이가 날 수 있습니다</string>
+
+    <string name="permission_allowed">허용됨 · 로밍 모바일 데이터만 자동 차감합니다.</string>
+    <string name="permission_required">허용 필요 · 현재는 입력한 U+ 잔여량이 그대로 표시됩니다.</string>
+    <string name="summary_unconfigured_meta">U+ 공식값을 기준으로 이 휴대폰 사용량을 차감합니다</string>
+    <string name="summary_ready">이 휴대폰 측정 · %1$s · 마지막 U+ 값 입력 %2$s</string>
+    <string name="summary_permission">U+ 입력값 유지 · 자동 차감 권한 필요 · 입력 %1$s</string>
+    <string name="summary_error">측정 실패 · 마지막 성공 %1$s · U+ 값 입력 %2$s</string>
+</resources>
