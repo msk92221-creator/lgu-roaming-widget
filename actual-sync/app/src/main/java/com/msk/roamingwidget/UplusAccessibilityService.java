@@ -110,8 +110,7 @@ public final class UplusAccessibilityService extends AccessibilityService {
             AccessibilityNodeInfo node = queue.removeFirst();
             visited++;
             if (node.isVisibleToUser() && !node.isPassword()) {
-                addText(output, node.getText());
-                addText(output, node.getContentDescription());
+                addNodeText(output, node.getText(), node.getContentDescription());
             }
             for (int index = 0; index < node.getChildCount(); index++) {
                 AccessibilityNodeInfo child = node.getChild(index);
@@ -123,17 +122,36 @@ public final class UplusAccessibilityService extends AccessibilityService {
         return output;
     }
 
-    private static void addText(List<String> output, CharSequence value) {
-        if (value == null) {
+    static void addNodeText(
+            List<String> output,
+            CharSequence textValue,
+            CharSequence descriptionValue
+    ) {
+        String text = sanitizeText(textValue);
+        String description = sanitizeText(descriptionValue);
+        if (text.isEmpty() && description.isEmpty()) {
             return;
+        }
+        if (text.isEmpty()) {
+            output.add(description);
+        } else if (description.isEmpty() || text.equals(description)) {
+            output.add(text);
+        } else {
+            output.add(text + " " + description);
+        }
+    }
+
+    private static String sanitizeText(CharSequence value) {
+        if (value == null) {
+            return "";
         }
         String text = value.toString().trim();
         if (text.isEmpty()) {
-            return;
+            return "";
         }
         if (text.length() > MAX_TEXT_LENGTH) {
             text = text.substring(0, MAX_TEXT_LENGTH);
         }
-        output.add(text);
+        return text;
     }
 }
