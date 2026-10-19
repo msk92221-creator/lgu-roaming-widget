@@ -75,6 +75,26 @@ final class OfficialUsageStore {
         return isTimestampActive(preferences(context).getLong(KEY_SYNC_REQUESTED_AT, 0L));
     }
 
+    static long syncRequestTimestamp(Context context) {
+        return preferences(context).getLong(KEY_SYNC_REQUESTED_AT, 0L);
+    }
+
+    static void finishSync(Context context) {
+        SharedPreferences preferences = preferences(context);
+        SharedPreferences.Editor editor = preferences.edit().putLong(KEY_SYNC_REQUESTED_AT, 0L);
+        if (STATUS_WAITING.equals(preferences.getString(KEY_STATUS, STATUS_NOT_STARTED))) {
+            editor.putString(KEY_STATUS, STATUS_SCREEN_NO_VALUE);
+        }
+        editor.apply();
+    }
+
+    static void restoreReadyStatus(Context context, UplusScreenParser.Result result) {
+        preferences(context).edit()
+                .putString(KEY_STATUS, STATUS_READY)
+                .putString(KEY_DIAGNOSTIC, result.diagnostic)
+                .apply();
+    }
+
     static void saveSuccess(Context context, UplusScreenParser.Result result) {
         long now = System.currentTimeMillis();
         preferences(context).edit()
@@ -90,7 +110,6 @@ final class OfficialUsageStore {
                 .putString(KEY_STATUS, STATUS_READY)
                 .putString(KEY_DIAGNOSTIC, result.diagnostic)
                 .putLong(KEY_LAST_SCAN_AT, now)
-                .putLong(KEY_SYNC_REQUESTED_AT, 0L)
                 .apply();
     }
 
