@@ -25,12 +25,15 @@
 
         <TextView
             android:id="@+id/widgetValue"
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="match_parent"
+            android:layout_gravity="center"
             android:ellipsize="end"
             android:gravity="center"
             android:includeFontPadding="false"
             android:maxLines="1"
+            android:paddingStart="4dp"
+            android:paddingEnd="4dp"
             android:text="@string/widget_no_value"
             android:textColor="#575D66"
             android:textSize="10sp"

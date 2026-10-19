@@ -77,7 +77,11 @@ final class WidgetUpdater {
                 : context.getString(R.string.balance_not_synced);
         views.setImageViewBitmap(R.id.widgetBar, bar);
         views.setTextViewText(R.id.widgetValue, display.remainingLabel);
-        views.setTextColor(R.id.widgetValue, display.remainingFraction >= 0.55
+        boolean labelCrossesFill = display.remainingFraction >= 0.25
+                && display.remainingFraction < 0.75;
+        views.setInt(R.id.widgetValue, "setBackgroundColor",
+                labelCrossesFill ? Color.argb(230, 255, 255, 255) : Color.TRANSPARENT);
+        views.setTextColor(R.id.widgetValue, display.remainingFraction >= 0.75
                 ? Color.WHITE : Color.rgb(87, 93, 102));
         views.setTextViewText(R.id.widgetUsed, display.usedLabel);
         views.setTextViewText(R.id.widgetDetails, context.getString(R.string.reference_usage_caption));
