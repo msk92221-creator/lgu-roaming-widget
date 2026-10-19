@@ -106,6 +106,8 @@ public final class MainActivity extends Activity {
             return;
         }
         OfficialUsageStore.beginSync(this);
+        WidgetUpdater.updateAll(this);
+        UplusAccessibilityService.requestScan();
         updateScreen();
         Toast.makeText(this, R.string.toast_sync_started, Toast.LENGTH_LONG).show();
         UplusLauncher.launch(this);

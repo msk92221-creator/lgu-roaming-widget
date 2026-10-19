@@ -75,6 +75,11 @@ final class WidgetUpdater {
         String captured = snapshot.hasValue
                 ? TimeFormat.relative(context, snapshot.capturedAt)
                 : context.getString(R.string.balance_not_synced);
+        boolean checking = OfficialUsageStore.isSyncSessionActive(context)
+                && (OfficialUsageStore.STATUS_WAITING.equals(snapshot.status)
+                || OfficialUsageStore.STATUS_READY.equals(snapshot.status));
+        views.setTextViewText(R.id.widgetRefresh, context.getString(checking
+                ? R.string.refresh_button_checking : R.string.refresh_button_label));
         views.setImageViewBitmap(R.id.widgetBar, bar);
         views.setTextViewText(R.id.widgetValue, display.remainingLabel);
         boolean labelCrossesFill = display.remainingFraction >= 0.25
@@ -85,11 +90,19 @@ final class WidgetUpdater {
                 ? Color.WHITE : Color.rgb(87, 93, 102));
         views.setTextViewText(R.id.widgetUsed, display.usedLabel);
         views.setTextViewText(R.id.widgetDetails, context.getString(R.string.reference_usage_caption));
-        views.setTextViewText(R.id.widgetUpdated, snapshot.hasValue
-                ? captured
-                : context.getString(R.string.balance_tap_to_sync));
+        String statusText = snapshot.hasValue ? captured : context.getString(R.string.balance_tap_to_sync);
+        if (checking) {
+            statusText = context.getString(R.string.refresh_checking_status);
+        } else if (OfficialUsageStore.STATUS_LOGIN_REQUIRED.equals(snapshot.status)) {
+            statusText = context.getString(R.string.refresh_login_status);
+        } else if (OfficialUsageStore.STATUS_AMBIGUOUS.equals(snapshot.status)
+                || OfficialUsageStore.STATUS_SCREEN_NO_VALUE.equals(snapshot.status)) {
+            statusText = context.getString(R.string.refresh_failed_status);
+        }
+        views.setTextViewText(R.id.widgetUpdated, statusText);
         views.setContentDescription(R.id.widgetRoot, context.getString(
-                R.string.balance_content_description, used, remaining, total, captured));
+                R.string.balance_content_description, used, remaining, total, captured)
+                + " " + statusText);
         return views;
     }
 

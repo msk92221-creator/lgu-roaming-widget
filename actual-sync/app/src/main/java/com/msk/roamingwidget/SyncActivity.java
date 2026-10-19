@@ -17,6 +17,8 @@ public final class SyncActivity extends Activity {
             return;
         }
         OfficialUsageStore.beginSync(this);
+        WidgetUpdater.updateAll(this);
+        UplusAccessibilityService.requestScan();
         Toast.makeText(this, R.string.toast_sync_started, Toast.LENGTH_LONG).show();
         UplusLauncher.launch(this);
         finish();

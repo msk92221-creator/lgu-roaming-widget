@@ -53,7 +53,7 @@
     <string name="toast_accessibility_first">먼저 접근성 설정에서 ‘U+one 로밍 실제값 읽기’를 켜 주세요.</string>
     <string name="toast_uplus_missing">U+one 앱을 찾지 못해 설치 페이지를 엽니다.</string>
     <string name="toast_sync_started">U+one에서 해외 로밍 → 이용 현황을 열어 주세요.</string>
-    <string name="toast_capture_success">U+one 실제 로밍 값을 위젯에 저장했습니다.</string>
+    <string name="toast_capture_success">U+one 표시값을 저장했습니다. 약 10초간 변경값을 더 확인합니다.</string>
     <string name="toast_screen_no_value">로밍 화면은 확인했지만 수치 구조를 아직 인식하지 못했습니다.</string>
     <string name="toast_diagnostic_copied">진단 정보를 복사했습니다.</string>
     <string name="toast_add_widget_manually">홈 화면을 길게 눌러 위젯 목록에서 추가해 주세요.</string>
