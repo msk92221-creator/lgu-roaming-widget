@@ -1,0 +1,6 @@
+<resources>
+    <string name="reference_usage_caption">로밍 데이터 사용량</string>
+    <string name="reference_bar_description">로밍 데이터 잔여량 막대</string>
+    <string name="reference_preview_remaining">47.8 GB 남음</string>
+    <string name="reference_preview_time">10월 19일 09:30</string>
+</resources>

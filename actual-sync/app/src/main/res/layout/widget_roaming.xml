@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/widgetRoot"
     android:layout_width="match_parent"
@@ -5,139 +6,101 @@
     android:background="@drawable/widget_background"
     android:gravity="center_vertical"
     android:orientation="vertical"
-    android:paddingStart="14dp"
-    android:paddingTop="8dp"
-    android:paddingEnd="14dp"
-    android:paddingBottom="8dp">
+    android:paddingStart="10dp"
+    android:paddingTop="16dp"
+    android:paddingEnd="10dp"
+    android:paddingBottom="10dp">
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="14dp">
+
+        <ImageView
+            android:id="@+id/widgetBar"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:importantForAccessibility="no"
+            android:scaleType="fitXY"
+            android:src="@drawable/widget_bar_track" />
+
+        <TextView
+            android:id="@+id/widgetValue"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_gravity="center"
+            android:ellipsize="end"
+            android:gravity="center"
+            android:includeFontPadding="false"
+            android:maxLines="1"
+            android:paddingStart="4dp"
+            android:paddingEnd="4dp"
+            android:text="@string/widget_no_value"
+            android:textColor="#575D66"
+            android:textSize="10sp"
+            android:textStyle="bold" />
+    </FrameLayout>
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="28dp"
+        android:layout_height="20dp"
+        android:layout_marginTop="10dp"
         android:gravity="center_vertical"
         android:orientation="horizontal">
 
         <TextView
-            android:id="@+id/widgetTitle"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
+            android:id="@+id/widgetUsed"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
             android:ellipsize="end"
+            android:gravity="center_vertical"
+            android:includeFontPadding="false"
             android:maxLines="1"
-            android:text="@string/balance_widget_title"
-            android:textColor="@color/white"
-            android:textSize="12sp"
-            android:textStyle="bold" />
+            android:text="@string/balance_missing"
+            android:textColor="#14171B"
+            android:textSize="15sp" />
 
         <ImageButton
             android:id="@+id/widgetRefresh"
-            android:layout_width="28dp"
-            android:layout_height="28dp"
+            android:layout_width="24dp"
+            android:layout_height="match_parent"
+            android:layout_marginStart="2dp"
             android:background="@android:color/transparent"
             android:contentDescription="@string/refresh"
-            android:padding="5dp"
+            android:padding="3dp"
             android:src="@drawable/ic_refresh"
-            android:tint="@color/white" />
+            android:tint="#626A73" />
     </LinearLayout>
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="14dp"
         android:gravity="center_vertical"
         android:orientation="horizontal">
 
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:orientation="vertical"
-            android:paddingEnd="10dp">
-
-            <TextView
-                android:id="@+id/widgetUsedLabel"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:ellipsize="end"
-                android:maxLines="1"
-                android:text="@string/balance_used_label"
-                android:textColor="@color/white_80"
-                android:textSize="11sp" />
-
-            <TextView
-                android:id="@+id/widgetUsed"
-                android:layout_width="match_parent"
-                android:layout_height="32dp"
-                android:autoSizeMaxTextSize="26sp"
-                android:autoSizeMinTextSize="12sp"
-                android:autoSizeStepGranularity="1sp"
-                android:autoSizeTextType="uniform"
-                android:ellipsize="end"
-                android:gravity="center_vertical"
-                android:maxLines="1"
-                android:text="@string/balance_missing"
-                android:textColor="@color/white"
-                android:textSize="26sp"
-                android:textStyle="bold" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:orientation="vertical"
-            android:paddingStart="10dp">
-
-            <TextView
-                android:id="@+id/widgetRemainingLabel"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:ellipsize="end"
-                android:maxLines="1"
-                android:text="@string/balance_remaining_label"
-                android:textColor="@color/white_80"
-                android:textSize="11sp" />
-
-            <TextView
-                android:id="@+id/widgetValue"
-                android:layout_width="match_parent"
-                android:layout_height="32dp"
-                android:autoSizeMaxTextSize="26sp"
-                android:autoSizeMinTextSize="12sp"
-                android:autoSizeStepGranularity="1sp"
-                android:autoSizeTextType="uniform"
-                android:ellipsize="end"
-                android:gravity="center_vertical"
-                android:maxLines="1"
-                android:text="@string/balance_missing"
-                android:textColor="@color/white"
-                android:textSize="26sp"
-                android:textStyle="bold" />
-        </LinearLayout>
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="4dp"
-        android:orientation="vertical">
-
         <TextView
             android:id="@+id/widgetDetails"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
             android:ellipsize="end"
+            android:gravity="center_vertical"
+            android:includeFontPadding="false"
             android:maxLines="1"
-            android:text="@string/balance_not_synced"
-            android:textColor="@color/white_80"
+            android:text="@string/reference_usage_caption"
+            android:textColor="#626A73"
             android:textSize="10sp" />
 
         <TextView
             android:id="@+id/widgetUpdated"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
             android:ellipsize="end"
+            android:gravity="center_vertical"
+            android:includeFontPadding="false"
             android:maxLines="1"
+            android:paddingStart="4dp"
             android:text="@string/balance_tap_to_sync"
-            android:textColor="@color/white_80"
-            android:textSize="10sp" />
+            android:textColor="#767C84"
+            android:textSize="9sp" />
     </LinearLayout>
 </LinearLayout>
