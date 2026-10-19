@@ -5,6 +5,8 @@ import android.appwidget.AppWidgetManager;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.SizeF;
@@ -31,28 +33,33 @@ final class WidgetUpdater {
 
     static void updateOne(Context context, AppWidgetManager manager, int appWidgetId) {
         OfficialUsageStore.Snapshot snapshot = OfficialUsageStore.read(context);
+        WidgetBalanceDisplay display = WidgetBalanceDisplay.from(snapshot.hasValue,
+                snapshot.remainingText, snapshot.usedText, snapshot.totalText);
+        Bitmap bar = WidgetBarRenderer.render(display.remainingFraction);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             Map<SizeF, RemoteViews> layouts = new LinkedHashMap<>();
-            layouts.put(new SizeF(180f, 100f), createViews(context, appWidgetId, LAYOUT_COMPACT, snapshot));
-            layouts.put(new SizeF(250f, 120f), createViews(context, appWidgetId, LAYOUT_STANDARD, snapshot));
-            layouts.put(new SizeF(320f, 120f), createViews(context, appWidgetId, LAYOUT_WIDE, snapshot));
+            layouts.put(new SizeF(180f, 72f), createViews(context, appWidgetId, LAYOUT_COMPACT, snapshot, display, bar));
+            layouts.put(new SizeF(250f, 84f), createViews(context, appWidgetId, LAYOUT_STANDARD, snapshot, display, bar));
+            layouts.put(new SizeF(320f, 84f), createViews(context, appWidgetId, LAYOUT_WIDE, snapshot, display, bar));
             manager.updateAppWidget(appWidgetId, new RemoteViews(layouts));
             return;
         }
 
         Bundle options = manager.getAppWidgetOptions(appWidgetId);
         int minWidth = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, 280);
-        int minHeight = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT, 120);
-        int layout = minWidth < 250 || minHeight < 120
+        int minHeight = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT, 84);
+        int layout = minWidth < 250 || minHeight < 84
                 ? LAYOUT_COMPACT : minWidth >= 320 ? LAYOUT_WIDE : LAYOUT_STANDARD;
-        manager.updateAppWidget(appWidgetId, createViews(context, appWidgetId, layout, snapshot));
+        manager.updateAppWidget(appWidgetId, createViews(context, appWidgetId, layout, snapshot, display, bar));
     }
 
     private static RemoteViews createViews(
             Context context,
             int appWidgetId,
             int layout,
-            OfficialUsageStore.Snapshot snapshot
+            OfficialUsageStore.Snapshot snapshot,
+            WidgetBalanceDisplay display,
+            Bitmap bar
     ) {
         int layoutId = layout == LAYOUT_COMPACT
                 ? R.layout.widget_roaming_compact
@@ -61,9 +68,6 @@ final class WidgetUpdater {
         PendingIntent sync = syncIntent(context, appWidgetId);
         views.setOnClickPendingIntent(R.id.widgetRoot, sync);
         views.setOnClickPendingIntent(R.id.widgetRefresh, sync);
-        views.setTextViewText(R.id.widgetTitle, context.getString(R.string.balance_widget_title));
-        views.setTextViewText(R.id.widgetUsedLabel, context.getString(R.string.balance_used_label));
-        views.setTextViewText(R.id.widgetRemainingLabel, context.getString(R.string.balance_remaining_label));
 
         String remaining = displayValue(context, snapshot.hasValue ? snapshot.remainingText : "");
         String used = displayValue(context, snapshot.hasValue ? snapshot.usedText : "");
@@ -71,11 +75,14 @@ final class WidgetUpdater {
         String captured = snapshot.hasValue
                 ? TimeFormat.relative(context, snapshot.capturedAt)
                 : context.getString(R.string.balance_not_synced);
-        views.setTextViewText(R.id.widgetValue, remaining);
-        views.setTextViewText(R.id.widgetUsed, used);
-        views.setTextViewText(R.id.widgetDetails, context.getString(R.string.balance_total, total));
+        views.setImageViewBitmap(R.id.widgetBar, bar);
+        views.setTextViewText(R.id.widgetValue, display.remainingLabel);
+        views.setTextColor(R.id.widgetValue, display.remainingFraction >= 0.55
+                ? Color.WHITE : Color.rgb(87, 93, 102));
+        views.setTextViewText(R.id.widgetUsed, display.usedLabel);
+        views.setTextViewText(R.id.widgetDetails, context.getString(R.string.reference_usage_caption));
         views.setTextViewText(R.id.widgetUpdated, snapshot.hasValue
-                ? context.getString(R.string.balance_sync_time, captured)
+                ? captured
                 : context.getString(R.string.balance_tap_to_sync));
         views.setContentDescription(R.id.widgetRoot, context.getString(
                 R.string.balance_content_description, used, remaining, total, captured));
