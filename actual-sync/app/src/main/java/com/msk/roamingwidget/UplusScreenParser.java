@@ -64,6 +64,10 @@ final class UplusScreenParser {
         static Result status(Status status, String diagnostic) {
             return new Result(status, null, "", "", diagnostic);
         }
+
+        Result withDiagnostic(String value) {
+            return new Result(status, kind, primaryText, detailsText, value, balance);
+        }
     }
 
     private static final class Candidate {

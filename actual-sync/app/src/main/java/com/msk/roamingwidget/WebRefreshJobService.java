@@ -16,9 +16,7 @@ public final class WebRefreshJobService extends JobService {
     private final Handler main = new Handler(Looper.getMainLooper());
     private final CaptureStability stability = new CaptureStability();
     private final Runnable poll = this::readPage;
-    private final Runnable timeout = () -> finish(UplusScreenParser.Result.status(
-            UplusScreenParser.Status.NO_VALUE,
-            "공식 웹 조회 제한시간 초과 · 이전 값과 확인 시각 유지"), true);
+    private final Runnable timeout = this::onTimeout;
 
     private JobParameters activeJob;
     private WebView webView;
@@ -27,6 +25,11 @@ public final class WebRefreshJobService extends JobService {
     private boolean pageFinished;
     private boolean reading;
     private boolean finished = true;
+    private long navigationGeneration;
+    private int readCount;
+    private UplusScreenParser.Result lastObservation;
+    private boolean lastFresh;
+    private String lastRecordedKey = "";
 
     @Override
     public boolean onStartJob(JobParameters parameters) {
@@ -48,6 +51,11 @@ public final class WebRefreshJobService extends JobService {
         finished = false;
         pageFinished = false;
         reading = false;
+        readCount = 0;
+        lastFresh = false;
+        lastRecordedKey = "";
+        lastObservation = UplusScreenParser.Result.status(UplusScreenParser.Status.LOADING,
+                "공식 웹 페이지 불러오기 시작 · 수량 영역 확인 대기");
         stability.reset();
         main.postDelayed(timeout, TIMEOUT_MS);
         try {
@@ -57,7 +65,8 @@ public final class WebRefreshJobService extends JobService {
             webView.layout(0, 0, 1080, 1920);
             client = new OfficialWebPage.Client(false,
                     () -> onPageFinished(token),
-                    result -> main.post(() -> onPageFailure(token, result)));
+                    result -> main.post(() -> onPageFailure(token, result)),
+                    url -> onNavigation(token));
             webView.setWebViewClient(client);
             webView.loadUrl(OfficialWebPage.URL);
             return true;
@@ -66,6 +75,17 @@ public final class WebRefreshJobService extends JobService {
                     "공식 웹 조회를 시작하지 못함 · 이전 값과 확인 시각 유지"), false);
             return false;
         }
+    }
+
+    private void onNavigation(long token) {
+        if (!isActive(token)) return;
+        navigationGeneration++;
+        pageFinished = false;
+        stability.reset();
+        lastObservation = UplusScreenParser.Result.status(UplusScreenParser.Status.LOADING,
+                "공식 웹 페이지 이동 중 · 수량 영역 확인 대기");
+        lastFresh = false;
+        lastRecordedKey = "";
     }
 
     private void onPageFinished(long token) {
@@ -110,17 +130,23 @@ public final class WebRefreshJobService extends JobService {
         }
         reading = true;
         WebView expectedView = webView;
+        long expectedNavigation = navigationGeneration;
         try {
             OfficialWebPage.read(expectedView, result -> main.post(() -> {
                 if (!isActive(token) || webView != expectedView) {
                     return;
                 }
                 reading = false;
+                if (expectedNavigation != navigationGeneration) {
+                    if (pageFinished) schedulePoll(POLL_MS);
+                    return;
+                }
                 if (result != null && result.status == UplusScreenParser.Status.LOGIN_REQUIRED) {
                     finish(result, true);
                     return;
                 }
                 boolean fresh = pageFinished && client != null && client.hasFreshBalanceRequest();
+                recordObservation(result, fresh);
                 if (stability.observe(result, fresh)) {
                     finish(result, true);
                     return;
@@ -132,6 +158,50 @@ public final class WebRefreshJobService extends JobService {
             finish(UplusScreenParser.Result.status(UplusScreenParser.Status.NO_VALUE,
                     "공식 웹 데이터를 읽지 못함 · 이전 값과 확인 시각 유지"), true);
         }
+    }
+
+    private void recordObservation(UplusScreenParser.Result result, boolean fresh) {
+        readCount++;
+        lastFresh = fresh;
+        if (result == null) {
+            result = OfficialWebPage.unavailable("공식 웹 읽기 결과 없음");
+        }
+        UplusScreenParser.Status status = result.status == UplusScreenParser.Status.SUCCESS
+                ? UplusScreenParser.Status.LOADING : result.status;
+        String reason = result.status == UplusScreenParser.Status.SUCCESS && !fresh
+                ? "공식 웹 수량 인식됨 · 새 로밍 조회 요청을 아직 확인하지 못함"
+                : safeDiagnostic(result.diagnostic);
+        lastObservation = UplusScreenParser.Result.status(status, reason);
+        String key = status.name() + "|" + reason + "|" + fresh;
+        if (!key.equals(lastRecordedKey)
+                && OfficialUsageStore.isCurrentRequest(this, requestToken)) {
+            OfficialUsageStore.saveScanResult(this, UplusScreenParser.Result.status(status,
+                    diagnosticSnapshot("공식 웹 조회 진행 중")));
+            lastRecordedKey = key;
+        }
+    }
+
+    private void onTimeout() {
+        UplusScreenParser.Status status = lastObservation != null
+                && lastObservation.status == UplusScreenParser.Status.AMBIGUOUS
+                ? UplusScreenParser.Status.AMBIGUOUS : UplusScreenParser.Status.NO_VALUE;
+        finish(UplusScreenParser.Result.status(status,
+                diagnosticSnapshot("공식 웹 조회 제한시간 초과 · 이전 값과 확인 시각 유지")), true);
+    }
+
+    private String diagnosticSnapshot(String reason) {
+        return reason + "\n"
+                + (lastObservation == null ? "수량 읽기 결과 없음"
+                : safeDiagnostic(lastObservation.diagnostic) + "\n읽기 상태 "
+                + lastObservation.status.name())
+                + " · 조회 요청 " + (lastFresh ? "관찰됨" : "미관찰")
+                + " · 문서 완료 " + (pageFinished ? "확인됨" : "대기")
+                + " · 확인 " + readCount + "회";
+    }
+
+    private static String safeDiagnostic(String diagnostic) {
+        if (diagnostic == null || diagnostic.isEmpty()) return "공식 웹 수량 영역 확인 대기";
+        return diagnostic.length() > 4096 ? diagnostic.substring(0, 4096) : diagnostic;
     }
 
     private boolean isActive(long token) {

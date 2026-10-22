@@ -15,8 +15,12 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
 import org.json.JSONObject;
+import org.json.JSONArray;
 import org.json.JSONTokener;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.util.Locale;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -27,46 +31,7 @@ final class OfficialWebPage {
     static final String URL = "https://www.lguplus.com/plan/roaming/my-roaming";
     static final String BALANCE_PATH = "/uhdc/fo/myin/roam/v1/data-rmndlist";
 
-    // These aggregate selectors were verified against the signed-in official web page and
-    // its public rendering source. Never substitute the basic-data component for the total.
-    static final String READ_SCRIPT = """
-            (() => {
-              const out = (state, remaining = '', total = '') =>
-                  JSON.stringify({state, remaining, total});
-              const host = location.hostname.toLowerCase();
-              if (location.protocol !== 'https:' ||
-                  (location.port !== '' && location.port !== '443')) return out('unsupported');
-              if (host === 'account.lguplus.com' || /^\\/login(?:\\/|$)/.test(location.pathname))
-                return out('login');
-              if (!['www.lguplus.com', 'm.lguplus.com'].includes(host) ||
-                  !/^\\/plan\\/roaming\\/my-roaming\\/?$/.test(location.pathname))
-                return out('unsupported');
-              const cards = document.querySelectorAll('.white-box.data-use-status');
-              if (!cards.length) return out('loading');
-              if (cards.length !== 1) return out('ambiguous');
-              const card = cards[0];
-              const titles = card.querySelectorAll('.data-title-area > h6');
-              const values = card.querySelectorAll('.data-title-area .data-info .point');
-              const graph = card.querySelector('.bar-graph-area');
-              const totals = graph ? graph.querySelectorAll('.data-legend .total-data') : [];
-              if (titles.length !== 1 || values.length !== 1 || totals.length !== 1)
-                return out('loading');
-              if (/무제한|일일|하루/.test(titles[0].textContent || ''))
-                return out('unsupported');
-              const completed = performance.getEntriesByType('resource').some(entry => {
-                try {
-                  const url = new URL(entry.name);
-                  return url.protocol === 'https:' &&
-                    (url.hostname === 'lguplus.com' || url.hostname.endsWith('.lguplus.com')) &&
-                    url.pathname === '/uhdc/fo/myin/roam/v1/data-rmndlist' &&
-                    entry.responseEnd > 0;
-                } catch (_) { return false; }
-              });
-              if (!completed) return out('loading');
-              return out('ready', (values[0].textContent || '').trim(),
-                  (totals[0].textContent || '').trim());
-            })()
-            """;
+    private static String cachedReaderScript;
 
     private OfficialWebPage() { }
 
@@ -106,20 +71,88 @@ final class OfficialWebPage {
     }
 
     static void read(WebView view, Consumer<UplusScreenParser.Result> callback) {
-        view.evaluateJavascript(READ_SCRIPT, encoded -> {
+        final String script;
+        try {
+            script = readerScript(view.getContext());
+        } catch (IOException exception) {
+            callback.accept(unavailable("로밍 읽기 모듈을 불러오지 못함"));
+            return;
+        }
+        view.evaluateJavascript(script, encoded -> {
             try {
                 Object decoded = new JSONTokener(encoded).nextValue();
-                if (!(decoded instanceof String) || ((String) decoded).length() > 512) {
+                if (!(decoded instanceof String) || ((String) decoded).length() > 8192) {
                     callback.accept(unavailable("공식 웹 응답 형식을 확인하지 못함"));
                     return;
                 }
                 JSONObject value = new JSONObject((String) decoded);
-                callback.accept(OfficialWebBalanceParser.parse(value.optString("state"),
-                        value.optString("remaining"), value.optString("total")));
+                UplusScreenParser.Result result = OfficialWebBalanceParser.parse(value.optString("state"),
+                        value.optString("remaining"), value.optString("total"));
+                callback.accept(result.withDiagnostic(result.diagnostic + "\n" + safeReadDetails(value)));
             } catch (Exception exception) {
                 callback.accept(unavailable("공식 웹 수량 영역을 확인하지 못함"));
             }
         });
+    }
+
+    private static synchronized String readerScript(Context context) throws IOException {
+        if (cachedReaderScript == null) {
+            try (InputStream input = context.getAssets().open("official_roaming_reader.js");
+                    ByteArrayOutputStream output = new ByteArrayOutputStream()) {
+                byte[] buffer = new byte[4096];
+                int count;
+                while ((count = input.read(buffer)) != -1) output.write(buffer, 0, count);
+                cachedReaderScript = output.toString("UTF-8");
+            }
+        }
+        return cachedReaderScript;
+    }
+
+    private static String safeReadDetails(JSONObject value) {
+        String layout = "mobile".equals(value.optString("layout")) ? "모바일" : "PC";
+        String stage;
+        switch (value.optString("stage")) {
+            case "ready": stage = "총 데이터 인식·조회 응답 완료"; break;
+            case "mobile_total_missing": stage = "모바일 총 데이터 행 확인 대기"; break;
+            case "desktop_total_missing": stage = "PC 총 데이터 영역 확인 대기"; break;
+            case "waiting_balance_response": stage = "총 데이터 행 인식됨 · 조회 응답 완료 확인 대기"; break;
+            case "multiple_total_rows": stage = "서로 다른 총 데이터 행 여러 개 감지"; break;
+            case "unsupported_plan": stage = "지원하지 않는 요금제 표시"; break;
+            case "node_limit": stage = "화면 노드 검사 한도 초과"; break;
+            case "login": stage = "공식 웹 로그인 화면"; break;
+            default: stage = "공식 로밍 화면 경로 확인 필요"; break;
+        }
+        StringBuilder result = new StringBuilder(layout + " · " + stage);
+        JSONArray assets = value.optJSONArray("assets");
+        boolean addedAsset = false;
+        if (assets != null) {
+            for (int index = 0; index < Math.min(12, assets.length()); index++) {
+                String asset = assets.optString(index);
+                if (!isPublicScriptReference(asset)) continue;
+                if (!addedAsset) result.append("\n공개 스크립트 참조(인증정보 없음):");
+                addedAsset = true;
+                result.append('\n').append(asset);
+            }
+        }
+        return result.toString();
+    }
+
+    static boolean isPublicScriptReference(String value) {
+        if (value == null || value.length() > 300) return false;
+        try {
+            URI uri = URI.create(value);
+            String path = uri.getRawPath();
+            return "https".equalsIgnoreCase(uri.getScheme())
+                    && ("m.lguplus.com".equalsIgnoreCase(uri.getHost())
+                    || "www.lguplus.com".equalsIgnoreCase(uri.getHost()))
+                    && (uri.getPort() == -1 || uri.getPort() == 443)
+                    && uri.getUserInfo() == null && uri.getRawQuery() == null
+                    && uri.getRawFragment() == null && path != null && path.length() <= 220
+                    && !path.contains("..")
+                    && path.matches("/(?:static|_nuxt|_next|assets)/[A-Za-z0-9_./-]+\\.js");
+        } catch (IllegalArgumentException exception) {
+            return false;
+        }
     }
 
     private static boolean isCarrierHttps(String value) {
@@ -147,6 +180,7 @@ final class OfficialWebPage {
         private final Consumer<String> navigation;
         private final AtomicBoolean freshBalanceRequest = new AtomicBoolean();
         private boolean rendererGone;
+        private String activeMainUrl;
 
         Client(boolean interactive, Runnable pageFinished,
                 Consumer<UplusScreenParser.Result> failure) {
@@ -172,6 +206,7 @@ final class OfficialWebPage {
         @Override
         public void onPageStarted(WebView view, String url, Bitmap icon) {
             freshBalanceRequest.set(false);
+            activeMainUrl = url;
             navigation.accept(url);
         }
 
@@ -216,6 +251,7 @@ final class OfficialWebPage {
         @Override
         public void onReceivedError(WebView view, WebResourceRequest request,
                 WebResourceError error) {
+            if (request.isForMainFrame() && !isCurrentMainFrame(view, request)) return;
             if (request.isForMainFrame()
                     || BALANCE_PATH.equals(request.getUrl().getPath())) {
                 failure.accept(unavailable("공식 웹 네트워크 오류 · 이전 값 유지"));
@@ -225,6 +261,7 @@ final class OfficialWebPage {
         @Override
         public void onReceivedHttpError(WebView view, WebResourceRequest request,
                 WebResourceResponse response) {
+            if (request.isForMainFrame() && !isCurrentMainFrame(view, request)) return;
             if (request.isForMainFrame()
                     || BALANCE_PATH.equals(request.getUrl().getPath())) {
                 failure.accept(response.getStatusCode() == 401
@@ -234,11 +271,25 @@ final class OfficialWebPage {
             }
         }
 
+        private boolean isCurrentMainFrame(WebView view, WebResourceRequest request) {
+            String current = activeMainUrl != null ? activeMainUrl : view.getUrl();
+            return current == null || sameNavigation(current, request.getUrl().toString());
+        }
+
         @Override
         public boolean onRenderProcessGone(WebView view, RenderProcessGoneDetail detail) {
             rendererGone = true;
             failure.accept(unavailable("공식 웹 렌더러 종료 · 이전 값 유지"));
             return true;
         }
+    }
+
+    static boolean sameNavigation(String first, String second) {
+        if (first == null || second == null) return false;
+        // Comparison stays in memory. Never include login URLs/queries in diagnostics.
+        int firstHash = first.indexOf('#');
+        int secondHash = second.indexOf('#');
+        return (firstHash < 0 ? first : first.substring(0, firstHash)).equals(
+                secondHash < 0 ? second : second.substring(0, secondHash));
     }
 }

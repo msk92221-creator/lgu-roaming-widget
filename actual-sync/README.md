@@ -4,9 +4,11 @@ LG U+ 공식 웹의 로밍 표시값을 홈 화면에 보여 주는 개인용 An
 
 ## 개발·검증 상태
 
-`3.0.0-beta1` / versionCode `7`은 실기기 확인용 베타입니다. 단위 테스트 68개와 lint(오류 0개), APK 빌드를 확인했습니다. PC의 정상 로그인 브라우저에서 공식 로밍 총 데이터 표시와 페이지 새로고침 후 세션 유지까지 확인했지만, Android 실기기에서 자체 WebView 로그인과 앱 종료 후 위젯 갱신은 검증 전입니다. 현재 확인 사례는 49GB 정량 요금제입니다.
+`3.0.0-beta2` / versionCode `8`은 실기기 확인용 베타입니다. Java 단위·구조 테스트 70개, 실제 JS 추출 모듈의 DOM 테스트 55개와 lint(오류 0개), APK 빌드를 확인했습니다. PC의 정상 로그인 브라우저에서 공식 총 데이터 조회·세션 유지와 사용자의 모바일 WebView 화면에서 로그인·실제 수치 표시를 확인했지만, 모바일 연결 완료와 앱 종료 후 위젯 갱신은 아직 검증 전입니다.
 
-[테스트 APK 다운로드](https://github.com/msk92221-creator/lgu-roaming-widget/releases/download/v3.0.0-beta1/lgu-roaming-widget-v3.0.0-beta1.apk)
+[테스트 APK 다운로드](https://github.com/msk92221-creator/lgu-roaming-widget/releases/download/v3.0.0-beta2/lgu-roaming-widget-v3.0.0-beta2.apk)
+
+beta1의 PC 전용 선택자를 모바일에서도 사용한 오류를 수정했습니다. 모바일에서는 정확한 `총 데이터` 라벨과 같은 최소 부모 행의 남은량/전체량만 선택합니다. 별도의 기본 데이터·충전 용량으로 대체하지 않습니다. 동일 DOM 행만 중복 제거하고 값이 같아도 서로 다른 총 데이터 행은 거부합니다. 모바일 조회 API의 실제 완료 확인은 여전히 폰에서 확인이 필요하며, 기존 알려진 요청·완료 검사를 임의로 완화하지 않았습니다.
 
 ## 기기 확인 순서
 
@@ -53,6 +55,14 @@ Windows PowerShell:
 
 ```powershell
 .\gradlew.bat -p actual-sync test lint assembleRelease
+```
+
+실제 APK에 들어가는 JavaScript DOM 추출 모듈의 테스트:
+
+```text
+cd actual-sync/js-tests
+npm ci --ignore-scripts
+npm test
 ```
 
 단위 테스트·lint·APK 빌드와 별도로, 실기기에서 최초 로그인, 앱 종료, 프로세스 재시작 후 갱신, 세션 만료, 네트워크 실패, 통신사 화면 변경을 확인해야 합니다. LG U+가 제공하거나 보증한 공식 앱이 아닙니다.

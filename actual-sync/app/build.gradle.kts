@@ -10,8 +10,8 @@ android {
         applicationId = "com.msk.roamingwidget"
         minSdk = 28
         targetSdk = 35
-        versionCode = 7
-        versionName = "3.0.0-beta1"
+        versionCode = 8
+        versionName = "3.0.0-beta2"
 
         testInstrumentationRunner = "android.app.InstrumentationTestRunner"
     }
