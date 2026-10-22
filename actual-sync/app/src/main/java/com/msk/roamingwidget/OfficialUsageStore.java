@@ -11,7 +11,8 @@ final class OfficialUsageStore {
     static final String STATUS_AMBIGUOUS = "ambiguous";
     static final String STATUS_LOGIN_REQUIRED = "login_required";
 
-    private static final String FILE_NAME = "uplus_actual_usage_v2";
+    // Keep old foreground-capture values separate: never relabel them as web sync results.
+    private static final String FILE_NAME = "uplus_actual_usage_web_v3";
     private static final String LEGACY_FILE_NAME = "roaming_widget";
     private static final String KEY_MIGRATED = "legacy_estimate_removed";
     private static final String KEY_HAS_VALUE = "has_official_value";
@@ -26,6 +27,8 @@ final class OfficialUsageStore {
     private static final String KEY_DIAGNOSTIC = "diagnostic";
     private static final String KEY_LAST_SCAN_AT = "last_scan_at";
     private static final String KEY_SYNC_REQUESTED_AT = "sync_requested_at";
+    private static final String KEY_LAST_REQUEST = "last_web_request";
+    private static final String KEY_REQUEST_STARTED_AT = "web_request_started_at";
     private static final long SESSION_LENGTH_MS = 10L * 60L * 1000L;
 
     private OfficialUsageStore() {
@@ -36,11 +39,12 @@ final class OfficialUsageStore {
         migrateLegacyEstimate(context, preferences);
         long syncRequestedAt = preferences.getLong(KEY_SYNC_REQUESTED_AT, 0L);
         String status = preferences.getString(KEY_STATUS, STATUS_NOT_STARTED);
-        if (STATUS_WAITING.equals(status) && !isTimestampActive(syncRequestedAt)) {
+        if (STATUS_WAITING.equals(status) && !isSyncSessionActive(context)) {
             status = STATUS_NOT_STARTED;
             preferences.edit()
                     .putString(KEY_STATUS, STATUS_NOT_STARTED)
                     .putLong(KEY_SYNC_REQUESTED_AT, 0L)
+                    .putLong(KEY_REQUEST_STARTED_AT, 0L)
                     .apply();
             syncRequestedAt = 0L;
         }
@@ -62,17 +66,40 @@ final class OfficialUsageStore {
     }
 
     static void beginSync(Context context) {
-        long now = System.currentTimeMillis();
+        long now = Math.max(System.currentTimeMillis(),
+                preferences(context).getLong(KEY_LAST_REQUEST, 0L) + 1L);
         preferences(context).edit()
                 .putString(KEY_STATUS, STATUS_WAITING)
                 .putLong(KEY_SYNC_REQUESTED_AT, now)
+                .putLong(KEY_LAST_REQUEST, now)
+                .putLong(KEY_REQUEST_STARTED_AT, System.currentTimeMillis())
                 .putLong(KEY_LAST_SCAN_AT, 0L)
                 .putString(KEY_DIAGNOSTIC, "")
                 .apply();
     }
 
+    static boolean isCurrentRequest(Context context, long request) {
+        return request > 0L && syncRequestTimestamp(context) == request
+                && isSyncSessionActive(context);
+    }
+
+    /** A late response must never overwrite a newer refresh or replace its status. */
+    static void completeWeb(Context context, long request, UplusScreenParser.Result result) {
+        if (!isCurrentRequest(context, request)) {
+            return;
+        }
+        if (result.status == UplusScreenParser.Status.SUCCESS) {
+            saveSuccess(context, result);
+        } else {
+            saveScanResult(context, result);
+        }
+        finishSync(context);
+    }
+
     static boolean isSyncSessionActive(Context context) {
-        return isTimestampActive(preferences(context).getLong(KEY_SYNC_REQUESTED_AT, 0L));
+        SharedPreferences preferences = preferences(context);
+        return preferences.getLong(KEY_SYNC_REQUESTED_AT, 0L) > 0L
+                && isTimestampActive(preferences.getLong(KEY_REQUEST_STARTED_AT, 0L));
     }
 
     static long syncRequestTimestamp(Context context) {
@@ -81,7 +108,8 @@ final class OfficialUsageStore {
 
     static void finishSync(Context context) {
         SharedPreferences preferences = preferences(context);
-        SharedPreferences.Editor editor = preferences.edit().putLong(KEY_SYNC_REQUESTED_AT, 0L);
+        SharedPreferences.Editor editor = preferences.edit().putLong(KEY_SYNC_REQUESTED_AT, 0L)
+                .putLong(KEY_REQUEST_STARTED_AT, 0L);
         if (STATUS_WAITING.equals(preferences.getString(KEY_STATUS, STATUS_NOT_STARTED))) {
             editor.putString(KEY_STATUS, STATUS_SCREEN_NO_VALUE);
         }
