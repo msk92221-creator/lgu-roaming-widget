@@ -114,6 +114,7 @@ final class OfficialWebPage {
         switch (value.optString("stage")) {
             case "ready": stage = "총 데이터 인식·조회 응답 완료"; break;
             case "mobile_total_missing": stage = "모바일 총 데이터 행 확인 대기"; break;
+            case "mobile_value_missing": stage = "모바일 총 데이터 직접 값 확인 대기"; break;
             case "desktop_total_missing": stage = "PC 총 데이터 영역 확인 대기"; break;
             case "waiting_balance_response": stage = "총 데이터 행 인식됨 · 조회 응답 완료 확인 대기"; break;
             case "multiple_total_rows": stage = "서로 다른 총 데이터 행 여러 개 감지"; break;
