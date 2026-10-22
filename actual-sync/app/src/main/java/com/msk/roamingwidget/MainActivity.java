@@ -3,7 +3,6 @@ package com.msk.roamingwidget;
 import android.app.Activity;
 import android.app.PendingIntent;
 import android.appwidget.AppWidgetManager;
-import android.content.ActivityNotFoundException;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.ComponentName;
@@ -11,6 +10,8 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.provider.Settings;
 import android.view.View;
 import android.view.WindowInsets;
@@ -23,6 +24,16 @@ public final class MainActivity extends Activity {
     private TextView permissionStatus;
     private TextView syncStatus;
     private TextView diagnosticText;
+    private final Handler screenHandler = new Handler(Looper.getMainLooper());
+    private final Runnable refreshScreen = new Runnable() {
+        @Override
+        public void run() {
+            updateScreen();
+            if (OfficialUsageStore.isSyncSessionActive(MainActivity.this)) {
+                screenHandler.postDelayed(this, 1000L);
+            }
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,7 +47,7 @@ public final class MainActivity extends Activity {
         diagnosticText = findViewById(R.id.diagnosticText);
 
         applySystemBarInsets(findViewById(R.id.mainRoot));
-        findViewById(R.id.permissionButton).setOnClickListener(view -> openAccessibilitySettings());
+        findViewById(R.id.permissionButton).setOnClickListener(view -> openOfficialLogin());
         findViewById(R.id.appInfoButton).setOnClickListener(view -> openAppInfo());
         findViewById(R.id.openUplusButton).setOnClickListener(view -> startSync());
         findViewById(R.id.copyDiagnosticButton).setOnClickListener(view -> copyDiagnostic());
@@ -48,11 +59,19 @@ public final class MainActivity extends Activity {
     protected void onResume() {
         super.onResume();
         updateScreen();
+        screenHandler.removeCallbacks(refreshScreen);
+        screenHandler.postDelayed(refreshScreen, 1000L);
+    }
+
+    @Override
+    protected void onPause() {
+        screenHandler.removeCallbacks(refreshScreen);
+        super.onPause();
     }
 
     private void updateScreen() {
         OfficialUsageStore.Snapshot snapshot = OfficialUsageStore.read(this);
-        boolean accessibilityEnabled = AccessibilityStatus.isEnabled(this);
+        boolean sessionConfigured = WebSessionState.isConfigured(this);
 
         if (snapshot.hasValue) {
             summaryValue.setText(snapshot.primaryText);
@@ -61,18 +80,18 @@ public final class MainActivity extends Activity {
                     : R.string.captured_meta;
             summaryMeta.setText(getString(meta, TimeFormat.relative(this, snapshot.capturedAt)));
             if (!snapshot.usedText.isEmpty()) {
-                summaryMeta.append("\n사용 " + snapshot.usedText + " · 전체 " + snapshot.totalText
-                        + "\n사용량 = U+one 전체량 − 남은량");
+                summaryMeta.append(getString(R.string.summary_balance_details,
+                        snapshot.usedText, snapshot.totalText));
             }
         } else {
             summaryValue.setText(R.string.not_captured);
             summaryMeta.setText(R.string.not_captured_meta);
         }
 
-        permissionStatus.setText(accessibilityEnabled
+        permissionStatus.setText(sessionConfigured
                 ? R.string.permission_allowed
                 : R.string.permission_required);
-        permissionStatus.setTextColor(getColor(accessibilityEnabled ? R.color.success : R.color.error));
+        permissionStatus.setTextColor(getColor(sessionConfigured ? R.color.success : R.color.warning));
 
         if (OfficialUsageStore.STATUS_READY.equals(snapshot.status)) {
             syncStatus.setText(R.string.sync_success);
@@ -87,7 +106,7 @@ public final class MainActivity extends Activity {
             syncStatus.setText(R.string.ambiguous_value);
             syncStatus.setTextColor(getColor(R.color.error));
         } else if (OfficialUsageStore.STATUS_LOGIN_REQUIRED.equals(snapshot.status)) {
-            syncStatus.setText(R.string.login_required);
+            syncStatus.setText(R.string.refresh_login_status);
             syncStatus.setTextColor(getColor(R.color.warning));
         } else {
             syncStatus.setText(R.string.sync_not_running);
@@ -100,25 +119,22 @@ public final class MainActivity extends Activity {
     }
 
     private void startSync() {
-        if (!AccessibilityStatus.isEnabled(this)) {
+        if (!WebSessionState.isConfigured(this)) {
             Toast.makeText(this, R.string.toast_accessibility_first, Toast.LENGTH_LONG).show();
-            openAccessibilitySettings();
             return;
         }
-        OfficialUsageStore.beginSync(this);
-        WidgetUpdater.updateAll(this);
-        UplusAccessibilityService.requestScan();
+        boolean requested = BackgroundRefresh.request(this);
         updateScreen();
-        Toast.makeText(this, R.string.toast_sync_started, Toast.LENGTH_LONG).show();
-        UplusLauncher.launch(this);
+        Toast.makeText(this, requested ? R.string.toast_sync_started
+                : R.string.toast_refresh_not_scheduled, Toast.LENGTH_LONG).show();
+        if (requested) {
+            screenHandler.removeCallbacks(refreshScreen);
+            screenHandler.postDelayed(refreshScreen, 1000L);
+        }
     }
 
-    private void openAccessibilitySettings() {
-        try {
-            startActivity(new Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS));
-        } catch (ActivityNotFoundException exception) {
-            openAppInfo();
-        }
+    private void openOfficialLogin() {
+        startActivity(new Intent(this, OfficialWebLoginActivity.class));
     }
 
     private void openAppInfo() {
@@ -135,7 +151,7 @@ public final class MainActivity extends Activity {
                 : snapshot.diagnostic;
         ClipboardManager clipboard = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
         if (clipboard != null) {
-            clipboard.setPrimaryClip(ClipData.newPlainText("U+one 로밍 진단", diagnostic));
+            clipboard.setPrimaryClip(ClipData.newPlainText(getString(R.string.diagnostic_clip_label), diagnostic));
             Toast.makeText(this, R.string.toast_diagnostic_copied, Toast.LENGTH_SHORT).show();
         }
     }

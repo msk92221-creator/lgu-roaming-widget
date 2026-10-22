@@ -54,6 +54,13 @@ final class UplusScreenParser {
             return new Result(Status.SUCCESS, kind, primary, details, diagnostic);
         }
 
+        static Result fromBalance(RoamingBalance balance, String diagnostic) {
+            return new Result(Status.SUCCESS, Kind.TOTAL_BALANCE,
+                    balance.remainingText + " 남음",
+                    "사용 " + balance.usedText + " · 전체 " + balance.totalText,
+                    diagnostic, balance);
+        }
+
         static Result status(Status status, String diagnostic) {
             return new Result(status, null, "", "", diagnostic);
         }

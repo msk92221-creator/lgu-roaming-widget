@@ -1,8 +1,8 @@
 <resources>
     <string name="refresh_button_label">새로고침</string>
     <string name="refresh_button_checking">확인 중</string>
-    <string name="refresh_checking_status">U+one에서 확인 중</string>
-    <string name="refresh_login_status">U+one 로그인 필요</string>
-    <string name="refresh_failed_status">동기화 확인 필요</string>
-    <string name="refresh_button_description">U+one 로밍 화면을 열어 현재 표시값을 다시 확인합니다</string>
+    <string name="refresh_checking_status">공식 웹 조회 중</string>
+    <string name="refresh_login_status">앱에서 재로그인 필요</string>
+    <string name="refresh_failed_status">조회 실패 · 이전 값 유지</string>
+    <string name="refresh_button_description">화면을 띄우지 않고 LG U+ 공식 웹의 현재 로밍 표시값을 조회합니다</string>
 </resources>

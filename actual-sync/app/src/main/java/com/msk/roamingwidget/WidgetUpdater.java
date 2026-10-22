@@ -112,9 +112,9 @@ final class WidgetUpdater {
     }
 
     private static PendingIntent syncIntent(Context context, int appWidgetId) {
-        Intent intent = new Intent(context, SyncActivity.class)
-                .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
-        return PendingIntent.getActivity(
+        Intent intent = new Intent(context, RoamingWidgetProvider.class)
+                .setAction(RoamingWidgetProvider.ACTION_REFRESH);
+        return PendingIntent.getBroadcast(
                 context,
                 20_000 + appWidgetId,
                 intent,
