@@ -282,3 +282,78 @@ test('oversized DOM fails safely rather than scanning arbitrary page data indefi
   assert.equal(result.state, 'unsupported');
   assert.equal(result.stage, 'node_limit');
 });
+
+// Unlike the earlier minimal-row fixtures, the official mobile renderer nests the
+// basic/charged component meters inside the aggregate LI. Keep this source-shaped
+// fixture so selecting the whole LI can never accidentally become the contract.
+const sourceMobileFixture = fs.readFileSync(path.join(__dirname,
+  'fixtures/mobile-plan-source.html'), 'utf8');
+
+test('official mobile source structure reads direct aggregate siblings despite nested equal basic meter', () => {
+  assertReady(read(sourceMobileFixture));
+});
+
+test('official mobile source structure excludes nested basic and charged meters from aggregate', () => {
+  const charged = '<li class="data-info__item data-info__item--charge">'
+    + '<div class="data-info__label">충전 데이터</div><div class="data-info__value">'
+    + '<span class="value value--current">1GB 남음</span>'
+    + '<span class="value value--total">1GB</span></div></li>';
+  const html = sourceMobileFixture.replace('43.9GB남음 / 49GB', '43.9GB남음 / 50GB')
+    .replace('43.9GB 남음', '42.9GB 남음').replace('<!-- charging-items -->', charged);
+  assertReady(read(html), '43.9GB', '50GB');
+});
+
+test('official mobile source structure ignores a hidden cloned plan', () => {
+  const hiddenClone = sourceMobileFixture.replace('<article class="roaming-card">',
+    '<article class="roaming-card" aria-hidden="true">');
+  assertReady(read(hiddenClone + sourceMobileFixture));
+});
+
+test('official mobile source structure refuses two physical plans with equal aggregate values', () => {
+  assert.equal(read(sourceMobileFixture + sourceMobileFixture).state, 'ambiguous');
+});
+
+test('official mobile source structure never substitutes basic value for absent direct aggregate value', () => {
+  const html = sourceMobileFixture.replace(
+    /<div class="roaming-info__value">\s*43\.9GB남음 \/ 49GB\s*<\/div>/, '');
+  assert.notEqual(read(html).state, 'ready');
+});
+
+test('official mobile source structure requires exact aggregate label rather than basic label', () => {
+  const html = sourceMobileFixture.replace('>총 데이터</div>', '>기본 데이터</div>');
+  assert.notEqual(read(html).state, 'ready');
+});
+
+test('official mobile source structure retains balance response completion gate', () => {
+  const result = read(sourceMobileFixture, { entries: [] });
+  assert.equal(result.state, 'loading');
+  assert.equal(result.stage, 'waiting_balance_response');
+  assert.equal(result.remaining, '');
+});
+
+test('official mobile source structure refuses contaminated direct aggregate text', () => {
+  const html = sourceMobileFixture.replace('43.9GB남음 / 49GB',
+    '43.9GB남음 / 49GB 1GB남음 / 2GB');
+  assert.notEqual(read(html).state, 'ready');
+});
+
+test('official mobile source structure refuses an absent direct aggregate label', () => {
+  const html = sourceMobileFixture.replace('<div class="roaming-info__label">총 데이터</div>', '');
+  assert.notEqual(read(html).state, 'ready');
+});
+
+test('official mobile source structure refuses multiple direct aggregate values', () => {
+  const html = sourceMobileFixture.replace('<div class="roaming-info__value">',
+    '<div class="roaming-info__value">1GB남음 / 2GB</div><div class="roaming-info__value">');
+  assert.equal(read(html).state, 'ambiguous');
+});
+
+for (const label of ['무제한', '데이터를 모두 이용했어요',
+  '데이터를 모두 사용했지만 제한된 속도로 계속 이용할 수 있어요']) {
+  test(`official mobile source structure refuses its nonnumeric plan branch: ${label}`, () => {
+    const html = sourceMobileFixture.replace('>총 데이터</div>', `>${label}</div>`);
+    const result = read(html);
+    assert.equal(result.state, 'unsupported');
+    assert.equal(result.remaining, '');
+  });
+}

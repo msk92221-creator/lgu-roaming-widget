@@ -40,30 +40,52 @@
   };
   let remaining = '', total = '';
   if (host === 'm.lguplus.com') {
-    // The phone screenshot's exact aggregate row, independent of mobile CSS class names.
-    // Do not read the basic component, a plan name, a promo, or a whole plan card.
     const amount = '((?:[0-9]{1,3}(?:,[0-9]{3})+|[0-9]+)(?:\\.[0-9]+)?\\s*(?:TB|GB|MB))';
     const pair = new RegExp('^총\\s*데이터\\s*' + amount + '\\s*남음\\s*(?:[/|│∣]\\s*)?'
       + amount + '$', 'i');
-    const rows = new Map();
-    const nodes = document.querySelectorAll('p,span,dt,dd,th,td,strong,b,em,label,div,h2,h3,h4,h5,h6');
-    if (nodes.length > 6000) return output('unsupported', 'node_limit');
-    for (const label of nodes) {
-      if (!/^총\s*데이터$/.test(normalize(label.textContent)) || hidden(label)) continue;
-      for (let row = label, depth = 0; row && depth < 7; row = row.parentElement, depth++) {
-        if (row === document.body || row === document.documentElement || hidden(row)) break;
-        const text = normalize(row.textContent);
-        if (text.length > 180 || /기본\s*데이터|추가\s*데이터|충전\s*데이터/.test(text)) break;
-        const match = pair.exec(text);
-        if (match) {
-          rows.set(row, [match[1], match[2]]);
-          break;
+
+    // Verified from the user's exact public mobile bundle cbad2c94.../281_f10ba86....js.
+    // The aggregate LI also contains .roaming-info__data with basic/tether/charge rows.
+    // Reading LI.textContent therefore mixes meters: select ONLY its direct label/value.
+    const sourceRows = Array.from(document.querySelectorAll(
+      '.my-roaming-section--plan .roaming-contents--plan article.roaming-card '
+      + 'li.roaming-info__item.roaming-info__item--data')).filter(row => !hidden(row));
+    if (sourceRows.length) {
+      if (sourceRows.length !== 1) return output('ambiguous', 'multiple_total_rows');
+      const children = Array.from(sourceRows[0].children);
+      const labels = children.filter(child => child.classList.contains('roaming-info__label') && !hidden(child));
+      const values = children.filter(child => child.classList.contains('roaming-info__value') && !hidden(child));
+      if (labels.length !== 1 || values.length > 1)
+        return output('ambiguous', 'multiple_total_rows');
+      if (!/^총\s*데이터$/.test(normalize(labels[0].textContent)))
+        return output('unsupported', 'unsupported_plan');
+      if (values.length !== 1) return output('loading', 'mobile_value_missing');
+      const text = normalize(values[0].textContent);
+      const match = text.length <= 160 ? pair.exec('총 데이터 ' + text) : null;
+      if (!match) return output('loading', 'mobile_value_missing');
+      [remaining, total] = [match[1], match[2]];
+    } else {
+      // Bounded compatibility path for a genuinely minimal aggregate row, never a whole card.
+      const rows = new Map();
+      const nodes = document.querySelectorAll('p,span,dt,dd,th,td,strong,b,em,label,div,h2,h3,h4,h5,h6');
+      if (nodes.length > 6000) return output('unsupported', 'node_limit');
+      for (const label of nodes) {
+        if (!/^총\s*데이터$/.test(normalize(label.textContent)) || hidden(label)) continue;
+        for (let row = label, depth = 0; row && depth < 7; row = row.parentElement, depth++) {
+          if (row === document.body || row === document.documentElement || hidden(row)) break;
+          const text = normalize(row.textContent);
+          if (text.length > 180 || /기본\s*데이터|추가\s*데이터|충전\s*데이터/.test(text)) break;
+          const match = pair.exec(text);
+          if (match) {
+            rows.set(row, [match[1], match[2]]);
+            break;
+          }
         }
       }
+      if (!rows.size) return output('loading', 'mobile_total_missing');
+      if (rows.size !== 1) return output('ambiguous', 'multiple_total_rows');
+      [remaining, total] = rows.values().next().value;
     }
-    if (!rows.size) return output('loading', 'mobile_total_missing');
-    if (rows.size !== 1) return output('ambiguous', 'multiple_total_rows');
-    [remaining, total] = rows.values().next().value;
   } else {
     const cards = Array.from(document.querySelectorAll('.white-box.data-use-status')).filter(card => !hidden(card));
     if (!cards.length) return output('loading', 'desktop_total_missing');

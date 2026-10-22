@@ -4,11 +4,11 @@ Galaxy Z Fold7에서 LG U+ 공식 웹의 로밍 잔여량·전체량을 확인�
 
 ## 현재 상태
 
-`v3.0.0-beta2` / versionCode `8`은 **실기기 확인용 베타**입니다. Java 단위·구조 테스트 70개, 실제 추출 JavaScript의 DOM 회귀 테스트 55개와 lint(오류 0개), APK 빌드 검사를 통과했습니다. 실제 Android 기기에서 앱을 닫은 뒤 위젯 갱신까지의 종단 간 동작은 검증 전입니다.
+`v3.0.0-beta3` / versionCode `9`은 **실기기 확인용 베타**입니다. Java 단위·구조 테스트 70개, 실제 추출 JavaScript의 DOM 회귀 테스트 68개와 lint(오류 0개), APK 빌드 검사를 통과했습니다. 실제 Android 기기에서 앱을 닫은 뒤 위젯 갱신까지의 종단 간 동작은 검증 전입니다.
 
-[v3.0.0-beta2 테스트 APK 다운로드](https://github.com/msk92221-creator/lgu-roaming-widget/releases/download/v3.0.0-beta2/lgu-roaming-widget-v3.0.0-beta2.apk)
+[v3.0.0-beta3 테스트 APK 다운로드](https://github.com/msk92221-creator/lgu-roaming-widget/releases/download/v3.0.0-beta3/lgu-roaming-widget-v3.0.0-beta3.apk)
 
-beta1은 PC용 DOM 선택자만 사용해 모바일 웹에서 로그인과 실제 수치가 보여도 연결을 완료하지 못했습니다. beta2는 모바일의 정확한 `총 데이터 43.9GB남음 / 49GB` 형태를 최소 부모 행에서 읽고, 기본 데이터·충전 홍보·복수 계량기를 제외합니다. 폰에서 사용되는 조회 API의 완료 확인까지 통과하는지는 아직 확인 전이며, 이 검사를 임의로 완화하지 않았습니다. 실패 단계와 비밀값 없는 공개 스크립트 참조를 진단에 남겨 원인을 구분합니다.
+beta3는 사용자가 제공한 정확한 공식 모바일 스크립트에서 확인한 구조를 사용합니다. 총량 항목 안에는 기본·테더링·충전 데이터도 중첩되어 있어, beta2의 부모 전체 텍스트 검사는 정상 총량을 거부했습니다. 이제 정확한 항목의 **직접 자식 총 데이터 라벨과 값만** 읽습니다. 실제 구조 fixture에서 수정 전 5개 실패를 재현하고 수정 후 통과시켰습니다. 모바일의 조회 경로도 같은 `GET /uhdc/fo/myin/roam/v1/data-rmndlist`임을 확인했으며, 요청·응답 완료 검사는 완화하지 않았습니다. 실제 폰의 연결 완료·무화면 갱신 확인은 여전히 필요합니다.
 
 정상 로그인한 PC 브라우저에서 [LG U+ 공식 해외 로밍 이용 현황](https://www.lguplus.com/plan/roaming/my-roaming)의 정량 요금제 총 데이터 표시와 페이지 새로고침 후 세션 유지를 확인했습니다. 이는 폰의 WebView에서도 동일하게 동작한다는 보증은 아닙니다.
 

@@ -4,11 +4,11 @@ LG U+ 공식 웹의 로밍 표시값을 홈 화면에 보여 주는 개인용 An
 
 ## 개발·검증 상태
 
-`3.0.0-beta2` / versionCode `8`은 실기기 확인용 베타입니다. Java 단위·구조 테스트 70개, 실제 JS 추출 모듈의 DOM 테스트 55개와 lint(오류 0개), APK 빌드를 확인했습니다. PC의 정상 로그인 브라우저에서 공식 총 데이터 조회·세션 유지와 사용자의 모바일 WebView 화면에서 로그인·실제 수치 표시를 확인했지만, 모바일 연결 완료와 앱 종료 후 위젯 갱신은 아직 검증 전입니다.
+`3.0.0-beta3` / versionCode `9`은 실기기 확인용 베타입니다. Java 단위·구조 테스트 70개, 실제 JS 추출 모듈의 DOM 테스트 68개와 lint(오류 0개), APK 빌드를 확인했습니다. PC의 정상 로그인 브라우저에서 공식 총 데이터 조회·세션 유지와 사용자의 모바일 WebView 화면에서 로그인·실제 수치 표시를 확인했지만, 모바일 연결 완료와 앱 종료 후 위젯 갱신은 아직 검증 전입니다.
 
-[테스트 APK 다운로드](https://github.com/msk92221-creator/lgu-roaming-widget/releases/download/v3.0.0-beta2/lgu-roaming-widget-v3.0.0-beta2.apk)
+[테스트 APK 다운로드](https://github.com/msk92221-creator/lgu-roaming-widget/releases/download/v3.0.0-beta3/lgu-roaming-widget-v3.0.0-beta3.apk)
 
-beta1의 PC 전용 선택자를 모바일에서도 사용한 오류를 수정했습니다. 모바일에서는 정확한 `총 데이터` 라벨과 같은 최소 부모 행의 남은량/전체량만 선택합니다. 별도의 기본 데이터·충전 용량으로 대체하지 않습니다. 동일 DOM 행만 중복 제거하고 값이 같아도 서로 다른 총 데이터 행은 거부합니다. 모바일 조회 API의 실제 완료 확인은 여전히 폰에서 확인이 필요하며, 기존 알려진 요청·완료 검사를 임의로 완화하지 않았습니다.
+beta3는 공식 모바일 번들 `cbad2c9403710139e15d4c01000289e1c0aa0812`의 `281_f10ba86c93c38669f1af.js`에서 확인한 `.roaming-info__item--data`의 직접 자식 `.roaming-info__label`과 `.roaming-info__value`만 읽습니다. 이 항목의 `.roaming-info__data`에는 기본·충전·테더링 수치가 중첩돼 있으므로 부모 전체 텍스트로 대체하지 않습니다. 동일 구조 fixture로 beta2의 5개 실패를 먼저 재현했습니다. 모바일 API 경로는 기존과 같은 GET임을 소스에서 확인했습니다. 실제 폰의 응답 완료·백그라운드 동작까지 검증된 것은 아니며 완료 검사는 그대로 유지합니다.
 
 ## 기기 확인 순서
 
