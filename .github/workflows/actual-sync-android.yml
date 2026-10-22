@@ -24,3 +24,9 @@ jobs:
 
       - name: Verify actual-value project
         run: ./gradlew -p actual-sync test lint assembleRelease --stacktrace
+
+      - name: Verify mobile and desktop DOM reader
+        working-directory: actual-sync/js-tests
+        run: |
+          npm ci --ignore-scripts --no-audit --no-fund
+          npm test

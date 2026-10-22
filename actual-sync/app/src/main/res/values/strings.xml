@@ -14,7 +14,7 @@
     <string name="permission_body">공식 LG U+ 웹 페이지에서 직접 로그인해 주세요. 로그인 세션은 이 앱의 WebView에 보관합니다. PC나 다른 브라우저의 로그인은 자동으로 옮겨지지 않습니다. 비밀번호·인증번호를 개발자에게 보내지 마세요.</string>
     <string name="permission_checking">로그인 설정 상태 확인 중…</string>
     <string name="permission_allowed">로그인 설정됨 · 세션 유효 여부는 새로고침 시 확인합니다</string>
-    <string name="permission_required">최초 로그인 또는 재로그인이 필요합니다</string>
+    <string name="permission_required">연결 설정이 아직 완료되지 않았습니다 · 진단을 확인해 주세요</string>
     <string name="permission_open">공식 웹 로그인 / 재로그인</string>
     <string name="app_info_open">앱 정보 열기</string>
     <string name="restricted_settings_help">이 버전은 접근성 권한을 사용하지 않습니다.</string>

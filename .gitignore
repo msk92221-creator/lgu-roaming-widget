@@ -13,3 +13,4 @@ keystore.properties
 release/
 *.apk
 *.aab
+node_modules/
